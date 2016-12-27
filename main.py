@@ -2,7 +2,7 @@ import discord
 import asyncio
 import traceback
 import colorama
-import random
+import re
 import logging
 
 colorama.init()
@@ -12,7 +12,6 @@ class client(discord.Client):
     async def on_ready(self):
         global OWNER 
         OWNER = await self.get_user_info("196391063987027969")
-        self.trigger_string = "~digbot"
         print("READY")
 
     async def phone_home(self, msg):
@@ -23,56 +22,54 @@ class client(discord.Client):
         print(colorama.Fore.RED+err+colorama.Fore.RESET)
         await self.phone_home("```Python\n"+err+"```")
 
+    def parse_msg(self, msg, trig_str, trig_delim, cmd_delim, arg_delim):
+        """
+        Parses msg according to [trig_str][trig_delim]<command>[cmd_delim]<arg>[arg_delim]<arg>
+            if trig_str is at the start of the msg:
+                if no command present, returns False
+                if command present: 
+                    returns dictionary with:
+                        <command> @ key 'cmd',
+                        None @ key 'argv',
+                        0 at key 'argc'
+                if command present with some arguments:
+                    returns dictionary with:
+                        <command> @ key 'cmd',
+                        [<arg>, <arg>] @ key 'argv',
+                        len('argv') @ key 'argc'
+            else:
+                returns False
+
+            NOTE: prepending arg_delim with '\' will escape splitting at that position.
+        """
+        if ((trig_delim == None) or (' ' in trig_delim)) and ' ' in trig_str:
+            raise ValueError("trig_str cannot have whitespace when splitting by whitespace.")
+        if trig_delim != None and trig_delim in trig_str:
+            raise ValueError("trig_delim cannot be within trig_str. Impossible to parse.")
+        msg = msg.strip()
+        msg = msg.split(trig_delim, 1)
+        if msg[0] == trig_str:
+            if len(msg) == 2:
+                if cmd_delim in msg[1]:
+                    msg[1] = msg[1].split(cmd_delim, 1)
+                    msg[1][1] = re.split(r"(?<!\\)"+arg_delim,msg[1][1])
+                    msg[1][1] = [s.replace("\\,", ",") for s in msg[1][1]]
+                    return {'cmd': msg[1][0], 'argv': msg[1][1], 'argc': len(msg[1][1])}
+                else:
+                    return {'cmd': msg[1], 'argv': None, 'argc': 0}
+            else:
+                return False
+        else:
+            return False
+
     async def on_message(self, msg):
 
         # COMMAND SYSTEM
         """
-            FOR NOTE:
-                COMMAND SYNTAX IS AS FOLLOWS,
-                ~digbot <command>:<argument>,<argument>...
+        Command syntax:
+            [trig_str][trig_delim]<command>[cmd_delim]<arg>[arg_delim]<arg>
         """
-        parsed_msg = msg.clean_content.split(":")
-        parsed_msg[0] = parsed_msg[0].lower()
-        parsed_msg[0] = parsed_msg[0].split()
-        if len(parsed_msg[0]) > 1:
-            cmd = ' '.join(parsed_msg[0][1:])
-            msg_trig = True
-        else:
-            msg_trig = False
-
-        if len(parsed_msg) > 1:
-            args = parsed_msg[1].split(",")
-        else:
-            args = False
-
-        if msg_trig:
-
-            chan = msg.channel
-
-            if cmd == "hello":
-                await self.send_message(chan, random.choice(["Hello!", "Salutation!", "Hi there!", "Hi.", "Hello.", "Hey!"]))
-
-            if args: # commands requiring arguments
-                if cmd == "echo":
-                    await self.send_message(chan, ','.join(args[0:]))
-
-            if msg.author == OWNER:
-                if cmd == "die":
-                    await self.logout()
-
-                if args:
-                    if cmd == "game":
-                        name = args[0]
-                        if name == "off":
-                            await self.change_presence(game=None)
-                        else:
-                            await self.change_presence(game=discord.Game(name=name))
-
-                    if cmd == "send":
-                        user_id = args[0]
-                        smsg = ",".join(args[1:])
-                        await self.send_message(await self.get_user_info(user_id), smsg)
-
+        parsed_msg = self.parse_msg(msg.clean_content, "~db", None, ":", ",")
         # COMMAND SYSTEM
 
         # INCOMING MESSAGE LOGGING (TODO: MAKE THIS MORE ROBUST + IMPLEMENT LOGGING)
@@ -85,18 +82,12 @@ class client(discord.Client):
             channame = "(DM) [{}]".format(','.join([str(u) for u in msg.channel.recipients]))
         else:
             channame = msg.channel.name
-        if msg_trig:
-            ansi = colorama.Fore.BLACK+colorama.Back.WHITE
-            msg_trig = False
-        elif msg.author == self.user:
-            ansi = colorama.Fore.CYAN
-        else:
-            ansi = ""
-        print(ansi+"'{}'@'{}', {} | {}: {}".format(servname, channame, msg.timestamp, str(msg.author), msg.clean_content)+colorama.Style.RESET_ALL)
+        print("'{}'@'{}', {} | {}: {}".format(servname, channame, msg.timestamp, str(msg.author), msg.clean_content))
         # INCOMING MESSAGE LOGGING
 
-
+"""
 bot = client()
 with open("token", "r") as tf:
     token = tf.read()
 bot.run(token)
+"""
