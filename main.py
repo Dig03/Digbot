@@ -1,7 +1,7 @@
 import discord
+from discord.ext import commands
 import asyncio
 import traceback
-import re
 import logging
 
 logger = logging.getLogger()
@@ -19,28 +19,57 @@ ch.setLevel(logging.INFO)
 ch.setFormatter(formatter)
 logger.addHandler(ch)
 
-client = discord.Client()
+bot = commands.Bot(command_prefix="`")
 
-@client.event
-async def on_ready():
-    logger.info("Logged in as {}, with ID {}".format(client.user.name, client.user.id))
+# HELPER FUNCTIONS
 
-@client.event
-async def on_error(event, *args, **kwargs):
-    logging.error(traceback.format_exc())
-
-@client.event
-async def on_message(msg):
-
-    # MESSAGE LOGGING
+def log_message(msg):
     servname = "(N/A)" if msg.server == None else msg.server.name
-    if type(msg.channel) == discord.PrivateChannel and msg.channel.name == None:
+    if isinstance(msg.channel, discord.PrivateChannel):
         channame = "(DM) [{}]".format(','.join([str(u) for u in msg.channel.recipients]))
     else:
         channame = msg.channel.name
     logging.info("'{}'@'{}', {} | {}: {}".format(servname, channame, msg.timestamp, str(msg.author), msg.clean_content))
-    # MESSAGE LOGGING
+
+async def check_admin(usr):
+    if usr == await bot.get_user_info("196391063987027969"):
+        return True
+    else:
+        return False
+
+# HELPER FUNCTIONS
+
+# EVENTS
+
+@bot.event
+async def on_ready():
+    logger.info("Logged in as {}, with ID {}".format(bot.user.name, bot.user.id))
+
+@bot.event
+async def on_error(event, *args, **kwargs):
+    logging.error(traceback.format_exc())
+
+@bot.event
+async def on_message(msg):
+    log_message(msg)
+    await bot.process_commands(msg)
+
+# EVENTS
+
+# COMMANDS
+
+@bot.command()
+async def echo(*, msg: str):
+    await bot.say(msg)
+
+@bot.command(pass_context=True)
+async def die(ctx):
+    if await check_admin(ctx.message.author):
+        logging.info("Shutting down by admin request.")
+        await bot.logout()
+
+# COMMANDS
 
 with open("token", "r") as tf:
     token = tf.read()
-client.run(token)
+bot.run(token)
