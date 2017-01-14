@@ -1,0 +1,123 @@
+import discord
+import asyncio
+import traceback
+import re
+from inspect import getfullargspec
+from inspect import iscoroutinefunction
+import logging
+
+main_logger = logging.getLogger('main')
+main_logger.setLevel(logging.INFO)
+discord_logger = logging.getLogger('discord')
+discord_logger.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s | %(levelname)s | %(name)s: %(message)s')
+
+main_console = logging.StreamHandler()
+main_console.setLevel(logging.INFO)
+main_console.setFormatter(formatter)
+main_logger.addHandler(main_console)
+
+discord_console = logging.StreamHandler()
+discord_console.setLevel(logging.DEBUG)
+discord_console.setFormatter(formatter)
+discord_logger.addHandler(discord_console)
+
+client = discord.Client()
+
+
+class Commands:
+
+    def __init__(self, prefix, client):
+        self.prefix = prefix
+        self.client = client
+        self.commands = {}
+
+    def reg(self, pass_msg=False):
+        def dec(func):
+            name = func.__name__
+            if name in self.commands:
+                raise ValueError('command with name \'{}\' already exists'.format(name))
+            if len(getfullargspec(func).args) == 0 and pass_msg:
+                raise ValueError('pass_msg functions must have at least one parameter')
+            self.commands[name] = (func, pass_msg)
+        return dec
+
+    def command_not_found(self, message):
+        pass
+
+    def not_enough_args(self, message):
+        pass
+
+    async def do_func(self, message, command, args):
+        if command in self.commands:
+            func, pass_msg = self.commands[command][0], self.commands[command][1]
+            argspec = getfullargspec(func)
+
+            opt_argc = 0 if argspec.defaults is None else len(argspec.defaults)
+            req_argc = 0 if argspec.args is None else len(argspec.args) - opt_argc
+            if pass_msg:
+                req_argc -= 1
+
+            if req_argc > len(args):
+                self.not_enough_args(message)
+                return
+
+            if req_argc < len(args):
+                args = args[:req_argc]
+
+            if pass_msg:
+
+                if iscoroutinefunction(func):
+                    await func(message, *args)
+                else:
+                    func(message, *args)
+
+            else:
+
+                if iscoroutinefunction(func):
+                    await func(*args)
+                else:
+                    func(*args)
+
+        else:
+            self.command_not_found
+
+    async def run(self, message):
+        content = message.clean_content
+        content = content.split(None, 1)
+        if content[0].startswith(self.prefix):
+            command = content[0][len(self.prefix):]
+            if len(content) > 1:
+                args = re.findall(r'\w+|"[\w\s]*"', content[1])
+                args = [arg.replace('"', '') for arg in args]
+                await self.do_func(message, command, args)
+            else:
+                args = []
+                await self.do_func(message, command, args)
+        else:
+            pass
+
+cmds = Commands('`', client)
+@cmds.reg(pass_msg=True)
+async def echo(msg, txt):
+    await client.send_message(msg.channel, txt)
+
+@cmds.reg()
+async def die():
+    await client.logout()
+
+@client.event
+async def on_ready():
+    main_logger.info('Logged in as {}, with ID {}'.format(client.user.name, client.user.id))
+
+@client.event
+async def on_error(event, *args, **kwargs):
+    main_logger.error(traceback.format_exc())
+
+@client.event
+async def on_message(message):
+    await cmds.run(message)
+
+with open('token', 'r') as f:
+    token = f.read()
+client.run(token)
