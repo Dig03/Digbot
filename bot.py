@@ -42,10 +42,10 @@ class Commands:
             self.commands[name] = (func, pass_msg)
         return dec
 
-    def command_not_found(self, message):
+    async def command_not_found(self, message):
         pass
 
-    def not_enough_args(self, message):
+    async def not_enough_args(self, message):
         pass
 
     async def do_func(self, message, command, args):
@@ -59,7 +59,7 @@ class Commands:
                 req_argc -= 1
 
             if req_argc > len(args):
-                self.not_enough_args(message)
+                await self.not_enough_args(message)
                 return
 
             if req_argc < len(args):
@@ -80,7 +80,7 @@ class Commands:
                     func(*args)
 
         else:
-            self.command_not_found
+            await self.command_not_found
 
     async def run(self, message):
         content = message.clean_content
@@ -88,8 +88,10 @@ class Commands:
         if content[0].startswith(self.prefix):
             command = content[0][len(self.prefix):]
             if len(content) > 1:
-                args = re.findall(r'\w+|"[\w\s]*"', content[1])
-                args = [arg.replace('"', '') for arg in args]
+                args = re.findall(r'[^\\"\s]+|(?<!\\)".+?(?<!\\)"', content[1])
+                for arg in args:
+                    if arg.startswith('"'):
+                        args[args.index(arg)] = arg[1:-1]
                 await self.do_func(message, command, args)
             else:
                 args = []
