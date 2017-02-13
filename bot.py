@@ -18,7 +18,7 @@ main_console.setFormatter(formatter)
 main_logger.addHandler(main_console)
 
 discord_console = logging.StreamHandler()
-discord_console.setLevel(logging.DEBUG)
+discord_console.setLevel(logging.ERROR)
 discord_console.setFormatter(formatter)
 discord_logger.addHandler(discord_console)
 
@@ -62,8 +62,8 @@ class Commands:
                 await self.not_enough_args(message)
                 return
 
-            if req_argc < len(args):
-                args = args[:req_argc]
+            if req_argc + opt_argc < len(args):
+                args = args[:req_argc + opt_argc]
 
             if pass_msg:
 
@@ -99,6 +99,8 @@ class Commands:
         else:
             pass
 
+# COMMANDS
+
 cmds = Commands('`', client)
 @cmds.reg(pass_msg=True)
 async def echo(msg, txt):
@@ -106,7 +108,14 @@ async def echo(msg, txt):
 
 @cmds.reg()
 async def die():
+    main_logger.info('Gracefully terminated by request.')
     await client.logout()
+
+@cmds.reg(pass_msg=True)
+async def sillyecho(msg, txt='hurr durr'):
+    await client.send_message(msg.channel, txt)
+
+# COMMANDS
 
 @client.event
 async def on_ready():
