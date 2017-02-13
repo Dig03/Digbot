@@ -2,6 +2,7 @@ import discord
 import asyncio
 import traceback
 import re
+import time
 from inspect import getfullargspec
 from inspect import iscoroutinefunction
 import logging
@@ -83,7 +84,7 @@ class Commands:
             await self.command_not_found
 
     async def run(self, message):
-        content = message.clean_content
+        content = message.content
         content = content.split(None, 1)
         if content[0].startswith(self.prefix):
             command = content[0][len(self.prefix):]
@@ -106,14 +107,18 @@ cmds = Commands('`', client)
 async def echo(msg, txt):
     await client.send_message(msg.channel, txt)
 
+@cmds.reg(pass_msg=True)
+async def sillyecho(msg, txt='hurr durr'):
+    await client.send_message(msg.channel, txt)
+
+@cmds.reg(pass_msg=True)
+async def gettime(msg):
+    await client.send_message(msg.channel, time.strftime('It is %a, %d %b %Y %H:%M:%S.', time.localtime()))
+
 @cmds.reg()
 async def die():
     main_logger.info('Gracefully terminated by request.')
     await client.logout()
-
-@cmds.reg(pass_msg=True)
-async def sillyecho(msg, txt='hurr durr'):
-    await client.send_message(msg.channel, txt)
 
 # COMMANDS
 
