@@ -5,6 +5,7 @@ import re
 import time
 import os
 import logging
+import random
 from inspect import getfullargspec
 from inspect import iscoroutinefunction
 
@@ -108,17 +109,32 @@ async def echo(msg, txt):
     await client.send_message(msg.channel, txt)
 
 @cmds.reg(pass_msg=True)
-async def sillyecho(msg, txt='hurr durr'):
-    await client.send_message(msg.channel, txt)
-
-@cmds.reg(pass_msg=True)
 async def gettime(msg):
     await client.send_message(msg.channel, time.strftime('It is %a, %d %b %Y %H:%M:%S.', time.localtime()))
 
-@cmds.reg()
-async def die():
-    main_logger.info('Gracefully terminated by request.')
-    await client.logout()
+@cmds.reg(pass_msg=True)
+async def roulette(msg):
+    if random.randint(1,6) is 6:
+        client.send_message(msg.channel, """```
+BBBBBBBBBBBBBBBBB               AAA               NNNNNNNN        NNNNNNNN        GGGGGGGGGGGGG
+B::::::::::::::::B             A:::A              N:::::::N       N::::::N     GGG::::::::::::G
+B::::::BBBBBB:::::B           A:::::A             N::::::::N      N::::::N   GG:::::::::::::::G
+BB:::::B     B:::::B         A:::::::A            N:::::::::N     N::::::N  G:::::GGGGGGGG::::G
+  B::::B     B:::::B        A:::::::::A           N::::::::::N    N::::::N G:::::G       GGGGGG
+  B::::B     B:::::B       A:::::A:::::A          N:::::::::::N   N::::::NG:::::G
+  B::::BBBBBB:::::B       A:::::A A:::::A         N:::::::N::::N  N::::::NG:::::G
+  B:::::::::::::BB       A:::::A   A:::::A        N::::::N N::::N N::::::NG:::::G    GGGGGGGGGG
+  B::::BBBBBB:::::B     A:::::A     A:::::A       N::::::N  N::::N:::::::NG:::::G    G::::::::G
+  B::::B     B:::::B   A:::::AAAAAAAAA:::::A      N::::::N   N:::::::::::NG:::::G    GGGGG::::G
+  B::::B     B:::::B  A:::::::::::::::::::::A     N::::::N    N::::::::::NG:::::G        G::::G
+  B::::B     B:::::B A:::::AAAAAAAAAAAAA:::::A    N::::::N     N:::::::::N G:::::G       G::::G
+BB:::::BBBBBB::::::BA:::::A             A:::::A   N::::::N      N::::::::N  G:::::GGGGGGGG::::G
+B:::::::::::::::::BA:::::A               A:::::A  N::::::N       N:::::::N   GG:::::::::::::::G
+B::::::::::::::::BA:::::A                 A:::::A N::::::N        N::::::N     GGG::::::GGG:::G
+BBBBBBBBBBBBBBBBBAAAAAAA                   AAAAAAANNNNNNNN         NNNNNNN        GGGGGG   GGGG
+    ```""")
+    else:
+        client.send_message(msg.channel, "click")
 
 # COMMANDS
 
