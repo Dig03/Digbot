@@ -3,9 +3,10 @@ import asyncio
 import traceback
 import re
 import time
+import os
+import logging
 from inspect import getfullargspec
 from inspect import iscoroutinefunction
-import logging
 
 main_logger = logging.getLogger('main')
 main_logger.setLevel(logging.INFO)
@@ -24,7 +25,6 @@ discord_console.setFormatter(formatter)
 discord_logger.addHandler(discord_console)
 
 client = discord.Client()
-
 
 class Commands:
 
@@ -134,6 +134,11 @@ async def on_error(event, *args, **kwargs):
 async def on_message(message):
     await cmds.run(message)
 
-with open('token', 'r') as f:
-    token = f.read()
+try:
+    with open('token', 'r') as f:
+        token = f.read()
+except FileNotFoundError:
+    token = os.getenv('token')
+    if token is None:
+        raise KeyError('token is not present as file or environment variable, cannot launch.')
 client.run(token)
