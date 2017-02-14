@@ -114,7 +114,7 @@ async def gettime(msg):
 
 @cmds.reg(pass_msg=True)
 async def roulette(msg):
-    if random.randint(1,6) is 6:
+    if random.randint(1,6) == 6:
         await client.send_message(msg.channel, """```
 BBBBBBBBBBBBBBBBB               AAA               NNNNNNNN        NNNNNNNN        GGGGGGGGGGGGG
 B::::::::::::::::B             A:::A              N:::::::N       N::::::N     GGG::::::::::::G
