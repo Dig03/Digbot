@@ -27,14 +27,14 @@ discord_logger.addHandler(discord_console)
 
 client = discord.Client()
 
-class Commands:
+class Bot:
 
     def __init__(self, prefix, client):
         self.prefix = prefix
         self.client = client
         self.commands = {}
 
-    def reg(self, pass_msg=False):
+    def cmd(self, pass_msg=False):
         def dec(func):
             name = func.__name__
             if name in self.commands:
@@ -85,6 +85,7 @@ class Commands:
             await self.command_not_found(message)
 
     async def run(self, message):
+        self.current_message = message
         content = message.content
         content = content.split(None, 1)
         if content[0].startswith(self.prefix):
@@ -101,21 +102,24 @@ class Commands:
         else:
             pass
 
+    async def say(self, *args, **kwargs):
+        await self.client.send_message(self.current_message.channel, *args, **kwargs)
+
 # COMMANDS
 
-cmds = Commands('`', client)
-@cmds.reg(pass_msg=True)
+bot = Bot('`', client)
+@bot.cmd(pass_msg=True)
 async def echo(msg, txt):
-    await client.send_message(msg.channel, txt)
+    await bot.say(txt)
 
-@cmds.reg(pass_msg=True)
+@bot.cmd(pass_msg=True)
 async def gettime(msg):
-    await client.send_message(msg.channel, time.strftime('It is %a, %d %b %Y %H:%M:%S.', time.localtime()))
+    await bot.say(time.strftime('It is %a, %d %b %Y %H:%M:%S.', time.localtime()))
 
-@cmds.reg(pass_msg=True)
+@bot.cmd(pass_msg=True)
 async def roulette(msg):
     if random.randint(1,6) == 6:
-        await client.send_message(msg.channel, """```
+        await bot.say("""```
 BBBBBBBBBBBBBBBBB               AAA               NNNNNNNN        NNNNNNNN        GGGGGGGGGGGGG
 B::::::::::::::::B             A:::A              N:::::::N       N::::::N     GGG::::::::::::G
 B::::::BBBBBB:::::B           A:::::A             N::::::::N      N::::::N   GG:::::::::::::::G
@@ -133,7 +137,7 @@ B:::::::::::::::::BA:::::A               A:::::A  N::::::N       N:::::::N   GG:
 B::::::::::::::::BA:::::A                 A:::::A N::::::N        N::::::N     GGG::::::GGG:::G
 BBBBBBBBBBBBBBBBBAAAAAAA                   AAAAAAANNNNNNNN         NNNNNNN        GGGGGG   GGGG```""")
     else:
-        await client.send_message(msg.channel, "click")
+        await bot.say("click")
 
 # COMMANDS
 
@@ -147,7 +151,7 @@ async def on_error(event, *args, **kwargs):
 
 @client.event
 async def on_message(message):
-    await cmds.run(message)
+    await bot.run(message)
 
 try:
     with open('token', 'r') as f:
