@@ -82,7 +82,7 @@ class Commands:
                     func(*args)
 
         else:
-            await self.command_not_found
+            await self.command_not_found(message)
 
     async def run(self, message):
         content = message.content
@@ -131,8 +131,7 @@ BB:::::B     B:::::B         A:::::::A            N:::::::::N     N::::::N  G:::
 BB:::::BBBBBB::::::BA:::::A             A:::::A   N::::::N      N::::::::N  G:::::GGGGGGGG::::G
 B:::::::::::::::::BA:::::A               A:::::A  N::::::N       N:::::::N   GG:::::::::::::::G
 B::::::::::::::::BA:::::A                 A:::::A N::::::N        N::::::N     GGG::::::GGG:::G
-BBBBBBBBBBBBBBBBBAAAAAAA                   AAAAAAANNNNNNNN         NNNNNNN        GGGGGG   GGGG
-    ```""")
+BBBBBBBBBBBBBBBBBAAAAAAA                   AAAAAAANNNNNNNN         NNNNNNN        GGGGGG   GGGG```""")
     else:
         await client.send_message(msg.channel, "click")
 
