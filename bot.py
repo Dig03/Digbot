@@ -144,7 +144,7 @@ BBBBBBBBBBBBBBBBBAAAAAAA                   AAAAAAANNNNNNNN         NNNNNNN      
 
 @bot.cmd()
 async def define(word):
-    definition = wordApi.getDefinitions(word)
+    definition = wordApi.getDefinitions(word, limit=1)
     if definition is None:
         await bot.say("```No definition found.```")
     else:
