@@ -67,6 +67,8 @@ class Bot:
             if req_argc + opt_argc < len(args):
                 args = args[:req_argc + opt_argc]
 
+            self._current_message = message
+
             if pass_msg:
 
                 if iscoroutinefunction(func):
@@ -85,7 +87,6 @@ class Bot:
             await self.command_not_found(message)
 
     async def run(self, message):
-        self.current_message = message
         content = message.content
         content = content.split(None, 1)
         if content[0].startswith(self.prefix):
@@ -103,21 +104,21 @@ class Bot:
             pass
 
     async def say(self, *args, **kwargs):
-        await self.client.send_message(self.current_message.channel, *args, **kwargs)
+        await self.client.send_message(self._current_message.channel, *args, **kwargs)
 
 # COMMANDS
 
 bot = Bot('`', client)
-@bot.cmd(pass_msg=True)
-async def echo(msg, txt):
+@bot.cmd()
+async def echo(txt):
     await bot.say(txt)
 
-@bot.cmd(pass_msg=True)
-async def gettime(msg):
+@bot.cmd()
+async def gettime():
     await bot.say(time.strftime('It is %a, %d %b %Y %H:%M:%S.', time.localtime()))
 
-@bot.cmd(pass_msg=True)
-async def roulette(msg):
+@bot.cmd()
+async def roulette():
     if random.randint(1,6) == 6:
         await bot.say("""```
 BBBBBBBBBBBBBBBBB               AAA               NNNNNNNN        NNNNNNNN        GGGGGGGGGGGGG
