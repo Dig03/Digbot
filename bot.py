@@ -6,6 +6,8 @@ import time
 import os
 import logging
 import random
+import json
+from wordnik import *
 from inspect import getfullargspec
 from inspect import iscoroutinefunction
 
@@ -24,8 +26,6 @@ discord_console = logging.StreamHandler()
 discord_console.setLevel(logging.ERROR)
 discord_console.setFormatter(formatter)
 discord_logger.addHandler(discord_console)
-
-client = discord.Client()
 
 class Bot:
 
@@ -107,8 +107,10 @@ class Bot:
         await self.client.send_message(self._current_message.channel, *args, **kwargs)
 
 # COMMANDS
-
+client = discord.Client()
 bot = Bot('`', client)
+
+
 @bot.cmd()
 async def echo(txt):
     await bot.say(txt)
@@ -119,7 +121,7 @@ async def gettime():
 
 @bot.cmd()
 async def roulette():
-    if random.randint(1,6) == 6:
+    if random.randint(1, 6) == 6:
         await bot.say("""```
 BBBBBBBBBBBBBBBBB               AAA               NNNNNNNN        NNNNNNNN        GGGGGGGGGGGGG
 B::::::::::::::::B             A:::A              N:::::::N       N::::::N     GGG::::::::::::G
@@ -140,6 +142,14 @@ BBBBBBBBBBBBBBBBBAAAAAAA                   AAAAAAANNNNNNNN         NNNNNNN      
     else:
         await bot.say("click")
 
+@bot.cmd()
+async def define(word):
+    definition = wordApi.getDefinitions(word)
+    if definition is None:
+        await bot.say("```No definition found.```")
+    else:
+        await bot.say("```{}```".format(definition[0].text))
+
 # COMMANDS
 
 @client.event
@@ -155,10 +165,14 @@ async def on_message(message):
     await bot.run(message)
 
 try:
-    with open('token', 'r') as f:
-        token = f.read()
+    with open('tokens', 'r') as f:
+        tokens = json.load(f)
 except FileNotFoundError:
-    token = os.getenv('token')
-    if token is None:
-        raise KeyError('token is not present as file or environment variable, cannot launch.')
-client.run(token)
+    tokens = {}
+    tokens['discord'] = os.getenv('discord')
+    tokens['wordnik'] = os.getenv('wordnik')
+    if None in tokens.values():
+        raise FileNotFoundError('tokens missing, cannot launch')
+
+wordApi = WordApi.WordApi(swagger.ApiClient(tokens['wordnik'], 'http://api.wordnik.com/v4'))
+client.run(tokens['discord'])
