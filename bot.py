@@ -1,15 +1,14 @@
 import discord
 import asyncio
-import traceback
 import re
 import time
 import os
 import logging
-import random
-import json
+import inspect
 from wordnik import *
-from inspect import getfullargspec
-from inspect import iscoroutinefunction
+from collections import OrderedDict
+from random import randint
+from traceback import format_exc
 
 main_logger = logging.getLogger('main')
 main_logger.setLevel(logging.INFO)
@@ -27,6 +26,13 @@ discord_console.setLevel(logging.ERROR)
 discord_console.setFormatter(formatter)
 discord_logger.addHandler(discord_console)
 
+
+class Bunch:
+
+    def __init__(self, **kwds):
+        self.__dict__.update(kwds)
+
+
 class Bot:
 
     def __init__(self, prefix, client):
@@ -39,46 +45,71 @@ class Bot:
             name = func.__name__
             if name in self.commands:
                 raise ValueError('command with name \'{}\' already exists'.format(name))
-            if len(getfullargspec(func).args) == 0 and pass_msg:
+            if len(inspect.getfullargspec(func).args) == 0 and pass_msg:
                 raise ValueError('pass_msg functions must have at least one parameter')
-            self.commands[name] = (func, pass_msg)
+            func.pass_msg = pass_msg
+            self.commands[name] = func
         return dec
 
     async def command_not_found(self, message):
         pass
 
-    async def not_enough_args(self, message):
-        pass
+    async def not_enough_args(self, syntax_msg):
+        await bot.say('Not enough arguments.\nSyntax: `' + syntax_msg)
+
+    def get_func_spec(self, func):
+        argspec = inspect.getfullargspec(func)
+        opt_argc = 0 if argspec.defaults is None else len(argspec.defaults)
+        req_argc = 0 if argspec.args is None else len(argspec.args) - opt_argc
+        opt_argv = argspec.args[req_argc:]
+        if func.pass_msg:
+            req_argv = argspec.args[1:req_argc]
+        else:
+            req_argv = argspec.args[:req_argc]
+        if func.pass_msg:
+            req_argc -= 1
+        defaults = argspec.defaults
+        return Bunch(opt_argc=opt_argc,
+                     req_argc=req_argc,
+                     opt_argv=opt_argv,
+                     req_argv=req_argv,
+                     defaults=defaults)
+
+    def get_syntax_msg(self, func):
+        spec = self.get_func_spec(func)
+        str_req_argv = ' '.join(['(' + arg + ')' for arg in spec.req_argv])
+        if spec.defaults is None:
+            str_opt_argv = ''
+        else:
+            str_opt_argv = ' '.join(['[{}={}]'.format(arg[0], arg[1]) for arg in zip(spec.opt_argv, spec.defaults)])
+        return '{} {} {}'.format(func.__name__, str_req_argv, str_opt_argv)
 
     async def do_func(self, message, command, args):
         if command in self.commands:
-            func, pass_msg = self.commands[command][0], self.commands[command][1]
-            argspec = getfullargspec(func)
+            func = self.commands[command]
+            spec = self.get_func_spec(func)
+            self._current_message = message
 
-            opt_argc = 0 if argspec.defaults is None else len(argspec.defaults)
-            req_argc = 0 if argspec.args is None else len(argspec.args) - opt_argc
-            if pass_msg:
-                req_argc -= 1
+            opt_argc = spec.opt_argc
+            req_argc = spec.req_argc
 
             if req_argc > len(args):
-                await self.not_enough_args(message)
+                await self.not_enough_args(self.get_syntax_msg(func))
                 return
 
             if req_argc + opt_argc < len(args):
                 args = args[:req_argc + opt_argc]
 
-            self._current_message = message
+            if func.pass_msg:
 
-            if pass_msg:
-
-                if iscoroutinefunction(func):
+                if inspect.iscoroutinefunction(func):
                     await func(message, *args)
                 else:
                     func(message, *args)
 
             else:
 
-                if iscoroutinefunction(func):
+                if inspect.iscoroutinefunction(func):
                     await func(*args)
                 else:
                     func(*args)
@@ -107,22 +138,34 @@ class Bot:
         await self.client.send_message(self._current_message.channel, *args, **kwargs)
 
 # COMMANDS
+
+
 client = discord.Client()
 bot = Bot('`', client)
 
 
 @bot.cmd()
-async def echo(txt):
-    await bot.say(txt)
+async def echo(text):
+    await bot.say(text)
+
+
+@bot.cmd()
+async def commands():
+    syntax_msgs = []
+    for func in bot.commands.values():
+        syntax_msgs.append(bot.get_syntax_msg(func))
+    await bot.say('```' + 'Syntax: `command (required arg) [optional arg=default value]\n' + '\n'.join(syntax_msgs) + '```')
+
 
 @bot.cmd()
 async def gettime():
     await bot.say(time.strftime('It is %a, %d %b %Y %H:%M:%S.', time.localtime()))
 
+
 @bot.cmd()
 async def roulette():
-    if random.randint(1, 6) == 6:
-        await bot.say("""```
+    if randint(1, 6) == 6:
+        await bot.say('''```
 BBBBBBBBBBBBBBBBB               AAA               NNNNNNNN        NNNNNNNN        GGGGGGGGGGGGG
 B::::::::::::::::B             A:::A              N:::::::N       N::::::N     GGG::::::::::::G
 B::::::BBBBBB:::::B           A:::::A             N::::::::N      N::::::N   GG:::::::::::::::G
@@ -138,41 +181,66 @@ BB:::::B     B:::::B         A:::::::A            N:::::::::N     N::::::N  G:::
 BB:::::BBBBBB::::::BA:::::A             A:::::A   N::::::N      N::::::::N  G:::::GGGGGGGG::::G
 B:::::::::::::::::BA:::::A               A:::::A  N::::::N       N:::::::N   GG:::::::::::::::G
 B::::::::::::::::BA:::::A                 A:::::A N::::::N        N::::::N     GGG::::::GGG:::G
-BBBBBBBBBBBBBBBBBAAAAAAA                   AAAAAAANNNNNNNN         NNNNNNN        GGGGGG   GGGG```""")
+BBBBBBBBBBBBBBBBBAAAAAAA                   AAAAAAANNNNNNNN         NNNNNNN        GGGGGG   GGGG```''')
     else:
-        await bot.say("click")
+        await bot.say('click')
+
+
+def uniques(seq):
+    seen = set()
+    seen_add = seen.add
+    return [x for x in seq if not (x in seen or seen_add(x))]
+
 
 @bot.cmd()
 async def define(word):
-    definition = wordApi.getDefinitions(word, limit=1)
-    if definition is None:
-        await bot.say("```No definition found.```")
+    definitions = wordApi.getDefinitions(word, sourceDictionaries='wiktionary')
+    if definitions is None:
+        definitions = wordApi.getDefinitions(word, sourceDictionaries='ahd')
+    if definitions is None:
+        await bot.say('**No definition found.**')
     else:
-        await bot.say("```{}```".format(definition[0].text))
+        partsofspeech = uniques([d.partOfSpeech for d in definitions])
+        parsed_defs = OrderedDict()
+        for partofspeech in partsofspeech:
+            parsed_defs[partofspeech] = []
+        for definition in definitions:
+            parsed_defs[definition.partOfSpeech].append(definition.text)
+        definition_string = ''
+        for partofspeech in parsed_defs:
+            definition_string += '{}:\n'.format(partofspeech.replace('-', ' '))
+            pos = 1
+            for text in parsed_defs[partofspeech]:
+                definition_string += '\t{}. {}\n'.format(pos, text)
+                pos += 1
+        await bot.say('```' + definition_string + '```')
 
 # COMMANDS
+
 
 @client.event
 async def on_ready():
     main_logger.info('Logged in as {}, with ID {}'.format(client.user.name, client.user.id))
 
+
 @client.event
 async def on_error(event, *args, **kwargs):
-    main_logger.error(traceback.format_exc())
+    main_logger.error(format_exc())
+    if event == 'on_message':
+        message = args[0]
+        main_logger.error('Message content: ' + message.content)
+        await bot.say('**An internal error occured. This event has been automatically logged.**')
+
 
 @client.event
 async def on_message(message):
     await bot.run(message)
 
-try:
-    with open('tokens', 'r') as f:
-        tokens = json.load(f)
-except FileNotFoundError:
-    tokens = {}
-    tokens['discord'] = os.getenv('discord')
-    tokens['wordnik'] = os.getenv('wordnik')
-    if None in tokens.values():
-        raise FileNotFoundError('tokens missing, cannot launch')
+tokens = {}
+tokens['discord'] = os.getenv('discord')
+tokens['wordnik'] = os.getenv('wordnik')
+if None in tokens.values():
+    raise EnvironmentError('tokens missing, cannot launch')
 
 wordApi = WordApi.WordApi(swagger.ApiClient(tokens['wordnik'], 'http://api.wordnik.com/v4'))
 client.run(tokens['discord'])

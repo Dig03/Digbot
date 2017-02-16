@@ -1,2 +1,2 @@
 # do not commit API keys
-tokens
+.env
