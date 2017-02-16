@@ -82,7 +82,11 @@ class Bot:
             str_opt_argv = ''
         else:
             str_opt_argv = ' '.join(['[{}={}]'.format(arg[0], arg[1]) for arg in zip(spec.opt_argv, spec.defaults)])
-        return '{} {} {}'.format(func.__name__, str_req_argv, str_opt_argv)
+        if func.__doc__ is None:
+            doc = ''
+        else:
+            doc = '\n\t' + func.__doc__
+        return '{} {} {}{}'.format(func.__name__, str_req_argv, str_opt_argv, doc)
 
     async def do_func(self, message, command, args):
         if command in self.commands:
@@ -146,24 +150,28 @@ bot = Bot('`', client)
 
 @bot.cmd()
 async def echo(text):
+    """Repeat given text back to user."""
     await bot.say(text)
 
 
 @bot.cmd()
 async def commands():
+    """List available commands."""
     syntax_msgs = []
     for func in bot.commands.values():
         syntax_msgs.append(bot.get_syntax_msg(func))
-    await bot.say('```' + 'Syntax: `command (required arg) [optional arg=default value]\n' + '\n'.join(syntax_msgs) + '```')
+    await bot.say('```' + 'Syntax: `command (required arg) [optional arg=default value]\n\n' + '\n'.join(syntax_msgs) + '```')
 
 
 @bot.cmd()
 async def gettime():
+    """Get the current local time of the bot."""
     await bot.say(time.strftime('It is %a, %d %b %Y %H:%M:%S.', time.localtime()))
 
 
 @bot.cmd()
 async def roulette():
+    """Play Russian Roulette."""
     if randint(1, 6) == 6:
         await bot.say('''```
 BBBBBBBBBBBBBBBBB               AAA               NNNNNNNN        NNNNNNNN        GGGGGGGGGGGGG
@@ -194,6 +202,7 @@ def uniques(seq):
 
 @bot.cmd()
 async def define(word):
+    """Get dictionary definitions of words."""
     definitions = wordApi.getDefinitions(word, sourceDictionaries='wiktionary')
     if definitions is None:
         definitions = wordApi.getDefinitions(word, sourceDictionaries='ahd')
