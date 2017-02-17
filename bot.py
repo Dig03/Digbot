@@ -9,6 +9,7 @@ from wordnik import *
 from collections import OrderedDict
 from random import randint
 from traceback import format_exc
+from sys import exc_info
 
 main_logger = logging.getLogger('main')
 main_logger.setLevel(logging.INFO)
@@ -38,7 +39,7 @@ class Bot:
     def __init__(self, prefix, client):
         self.prefix = prefix
         self.client = client
-        self.commands = {}
+        self.commands = OrderedDict()
 
     def cmd(self, pass_msg=False):
         def dec(func):
@@ -55,7 +56,7 @@ class Bot:
         pass
 
     async def not_enough_args(self, syntax_msg):
-        await bot.say('Not enough arguments.\nSyntax: `' + syntax_msg)
+        await bot.say('```Not enough arguments.\nSyntax: `' + syntax_msg + '```')
 
     def get_func_spec(self, func):
         argspec = inspect.getfullargspec(func)
@@ -86,7 +87,7 @@ class Bot:
             doc = ''
         else:
             doc = '\n\t' + func.__doc__
-        return '{} {} {}{}'.format(func.__name__, str_req_argv, str_opt_argv, doc)
+        return func.__name__ + ' ' * bool(spec.req_argc) + str_req_argv + ' ' * bool(spec.opt_argc) + str_opt_argv + doc
 
     async def do_func(self, message, command, args):
         if command in self.commands:
@@ -155,12 +156,18 @@ async def echo(text):
 
 
 @bot.cmd()
-async def commands():
+async def help(command='all'):
     """List available commands."""
-    syntax_msgs = []
-    for func in bot.commands.values():
-        syntax_msgs.append(bot.get_syntax_msg(func))
-    await bot.say('```' + 'Syntax: `command (required arg) [optional arg=default value]\n\n' + '\n'.join(syntax_msgs) + '```')
+    if command == 'all':
+        syntax_msgs = []
+        for func in bot.commands.values():
+            syntax_msgs.append(bot.get_syntax_msg(func))
+        await bot.say('```' + 'Syntax: `command (required arg) [optional arg=default value]\n\n' + '\n'.join(syntax_msgs) + '```')
+    else:
+        if command in bot.commands:
+            await bot.say('```\n' + bot.get_syntax_msg(bot.commands[command]) + '```')
+        else:
+            await bot.say('```Command not found.```')
 
 
 @bot.cmd()
@@ -194,6 +201,22 @@ BBBBBBBBBBBBBBBBBAAAAAAA                   AAAAAAANNNNNNNN         NNNNNNN      
         await bot.say('click')
 
 
+@bot.cmd()
+async def dice(sides=6, count=1):
+    """Role (a) di(e/ce)."""
+    try:
+        sides = int(sides)
+        count = int(count)
+    except ValueError:
+        await bot.say('Invalid arguments, make sure both are numbers.')
+    else:
+        if sides < 1:
+            await bot.say('Invalid number of sides.')
+        else:
+            dice = [str(randint(1, sides)) for _ in range(count)]
+            await bot.say(' '.join(dice))
+
+
 def uniques(seq):
     seen = set()
     seen_add = seen.add
@@ -203,6 +226,7 @@ def uniques(seq):
 @bot.cmd()
 async def define(word):
     """Get dictionary definitions of words."""
+    word = word.lower()
     definitions = wordApi.getDefinitions(word, sourceDictionaries='wiktionary')
     if definitions is None:
         definitions = wordApi.getDefinitions(word, sourceDictionaries='ahd')
@@ -230,15 +254,19 @@ async def define(word):
 @client.event
 async def on_ready():
     main_logger.info('Logged in as {}, with ID {}'.format(client.user.name, client.user.id))
+    await client.change_presence(game=discord.Game(name='Type `help'))
 
 
 @client.event
 async def on_error(event, *args, **kwargs):
-    main_logger.error(format_exc())
-    if event == 'on_message':
-        message = args[0]
-        main_logger.error('Message content: ' + message.content)
-        await bot.say('**An internal error occured. This event has been automatically logged.**')
+    if exc_info()[0] is discord.errors.HTTPException:
+        await bot.say('**Unable to process command, the response text is >2000 characters.**')
+    else:
+        main_logger.error(format_exc())
+        if event == 'on_message':
+            message = args[0]
+            main_logger.error('Message content: ' + message.content)
+            await bot.say('**An internal error occured. This event has been automatically logged.**')
 
 
 @client.event
