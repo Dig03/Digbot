@@ -203,7 +203,7 @@ BBBBBBBBBBBBBBBBBAAAAAAA                   AAAAAAANNNNNNNN         NNNNNNN      
 
 @bot.cmd()
 async def dice(sides=6, count=1):
-    """Role (a) di(e/ce)."""
+    """Roll (a) di(e/ce)."""
     try:
         sides = int(sides)
         count = int(count)
