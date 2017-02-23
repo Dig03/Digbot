@@ -202,7 +202,7 @@ BBBBBBBBBBBBBBBBBAAAAAAA                   AAAAAAANNNNNNNN         NNNNNNN      
 
 
 @bot.cmd()
-async def dice(sides=6, count=1):
+async def dice(count=1, sides=6):
     """Roll (a) di(e/ce)."""
     try:
         sides = int(sides)
