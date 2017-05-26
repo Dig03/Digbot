@@ -212,6 +212,8 @@ async def dice(count=1, sides=6):
     else:
         if sides < 1:
             await bot.say('Invalid number of sides.')
+        elif count > 101 or sides > 101:
+            await bot.say('Too many dice or sides, please try with numbers at or below 100.')
         else:
             dice = [str(randint(1, sides)) for _ in range(count)]
             await bot.say(' '.join(dice))
