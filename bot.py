@@ -124,6 +124,8 @@ class Bot:
 
     async def run(self, message):
         content = message.content
+        if content == '':
+            return
         content = content.split(None, 1)
         if content[0].startswith(self.prefix):
             command = content[0][len(self.prefix):]
