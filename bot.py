@@ -124,7 +124,7 @@ class Bot:
 
     async def run(self, message):
         content = message.content
-        if content == '':
+        if message.author.bot or content == '':
             return
         content = content.split(None, 1)
         if content[0].startswith(self.prefix):
