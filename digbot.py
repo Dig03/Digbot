@@ -37,6 +37,14 @@ async def echo(text):
     await bot.say(text)
 
 
+@bot.cmd(pass_msg=True)
+async def py(msg, code):
+    if msg.author.permissions_in(msg.channel).administrator:
+        await bot.say(str(eval(code)))
+    else:
+        pass
+
+
 @bot.cmd()
 async def help(command='all'):
     """List available commands."""
