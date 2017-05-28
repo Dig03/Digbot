@@ -68,7 +68,6 @@ class Bot:
         if command in self.commands:
             func = self.commands[command]
             spec = self.get_func_spec(func)
-            self._current_message = message
 
             opt_argc = spec.opt_argc
             req_argc = spec.req_argc
@@ -98,6 +97,7 @@ class Bot:
             await self.command_not_found(message)
 
     async def run(self, message):
+        self._current_message = message
         content = message.content
         if message.author.bot or content == '':
             return
