@@ -40,7 +40,7 @@ async def echo(text):
 @bot.cmd(pass_msg=True)
 async def py(msg, code):
     if msg.author.permissions_in(msg.channel).administrator:
-        await bot.say(str(eval(code)))
+        exec(code)
     else:
         pass
 
