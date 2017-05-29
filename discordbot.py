@@ -11,9 +11,10 @@ class Bunch:
 
 class Bot:
 
-    def __init__(self, prefix, client):
+    def __init__(self, prefix, client, owner_id='0'):
         self.prefix = prefix
         self.client = client
+        self.owner_id = owner_id
         self.commands = OrderedDict()
 
     def command(self, pass_msg=False):
@@ -25,6 +26,14 @@ class Bot:
                 raise ValueError('pass_msg functions must have at least one parameter')
             func.pass_msg = pass_msg
             self.commands[name] = func
+        return dec
+
+    def permissions(self, **perms):
+        def dec(func):
+            if func is None:
+                raise SyntaxError('command must be defined before permissions are assigned')
+            func.perms = perms
+            return func
         return dec
 
     async def run(self, message):
@@ -47,11 +56,21 @@ class Bot:
         else:
             pass
 
+    def has_permissions(self, message, perms):
+        if message.author.id == self.owner_id:
+            return True
+        resolved = message.channel.permissions_for(message.author)
+        return all(getattr(resolved, perm, None) == value for perm, value in perms.items())
+
     async def do_func(self, message, command, args):
         if command in self.commands:
             func = self.commands[command]
-            spec = self.get_func_spec(func)
 
+            if hasattr(func, 'perms'):
+                if not self.has_permissions(message, func.perms):
+                    return
+
+            spec = self.get_func_spec(func)
             opt_argc = spec.opt_argc
             req_argc = spec.req_argc
 
@@ -118,3 +137,6 @@ class Bot:
 
     async def not_enough_args(self, syntax_msg):
         await self.say('```Not enough arguments.\nSyntax: `' + syntax_msg + '```')
+
+    async def insufficient_permissions(self):
+        pass

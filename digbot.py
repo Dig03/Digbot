@@ -28,13 +28,20 @@ discord_logger.addHandler(discord_console)
 
 
 client = discord.Client()
-bot = discordbot.Bot('!', client)
+bot = discordbot.Bot('!', client, '196391063987027969')
 
 
 @bot.command()
 async def echo(text):
     """Repeat given text back to user."""
     await bot.say(text)
+
+
+@bot.command()
+@bot.permissions(administrator=True)
+async def adminonly():
+    """Permissions test."""
+    await bot.say('True')
 
 
 @bot.command()
