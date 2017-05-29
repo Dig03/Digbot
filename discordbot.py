@@ -27,42 +27,25 @@ class Bot:
             self.commands[name] = func
         return dec
 
-    async def command_not_found(self, message):
-        pass
-
-    async def not_enough_args(self, syntax_msg):
-        await self.say('```Not enough arguments.\nSyntax: `' + syntax_msg + '```')
-
-    def get_func_spec(self, func):
-        argspec = inspect.getfullargspec(func)
-        opt_argc = 0 if argspec.defaults is None else len(argspec.defaults)
-        req_argc = 0 if argspec.args is None else len(argspec.args) - opt_argc
-        opt_argv = argspec.args[req_argc:]
-        if func.pass_msg:
-            req_argv = argspec.args[1:req_argc]
+    async def run(self, message):
+        self._current_message = message
+        content = message.content
+        if message.author.bot or content == '':
+            return
+        content = content.split(None, 1)
+        if content[0].startswith(self.prefix):
+            command = content[0][len(self.prefix):]
+            if len(content) > 1:
+                args = re.findall(r'[^\\"\s]+|(?<!\\)".+?(?<!\\)"', content[1])
+                for arg in args:
+                    if arg.startswith('"'):
+                        args[args.index(arg)] = arg[1:-1]
+                await self.do_func(message, command, args)
+            else:
+                args = []
+                await self.do_func(message, command, args)
         else:
-            req_argv = argspec.args[:req_argc]
-        if func.pass_msg:
-            req_argc -= 1
-        defaults = argspec.defaults
-        return Bunch(opt_argc=opt_argc,
-                     req_argc=req_argc,
-                     opt_argv=opt_argv,
-                     req_argv=req_argv,
-                     defaults=defaults)
-
-    def get_syntax_msg(self, func):
-        spec = self.get_func_spec(func)
-        str_req_argv = ' '.join(['(' + arg + ')' for arg in spec.req_argv])
-        if spec.defaults is None:
-            str_opt_argv = ''
-        else:
-            str_opt_argv = ' '.join(['[{}={}]'.format(arg[0], arg[1]) for arg in zip(spec.opt_argv, spec.defaults)])
-        if func.__doc__ is None:
-            doc = ''
-        else:
-            doc = '\n\t' + func.__doc__
-        return func.__name__ + ' ' * bool(spec.req_argc) + str_req_argv + ' ' * bool(spec.opt_argc) + str_opt_argv + doc
+            pass
 
     async def do_func(self, message, command, args):
         if command in self.commands:
@@ -96,25 +79,42 @@ class Bot:
         else:
             await self.command_not_found(message)
 
-    async def run(self, message):
-        self._current_message = message
-        content = message.content
-        if message.author.bot or content == '':
-            return
-        content = content.split(None, 1)
-        if content[0].startswith(self.prefix):
-            command = content[0][len(self.prefix):]
-            if len(content) > 1:
-                args = re.findall(r'[^\\"\s]+|(?<!\\)".+?(?<!\\)"', content[1])
-                for arg in args:
-                    if arg.startswith('"'):
-                        args[args.index(arg)] = arg[1:-1]
-                await self.do_func(message, command, args)
-            else:
-                args = []
-                await self.do_func(message, command, args)
+    def get_func_spec(self, func):
+        argspec = inspect.getfullargspec(func)
+        opt_argc = 0 if argspec.defaults is None else len(argspec.defaults)
+        req_argc = 0 if argspec.args is None else len(argspec.args) - opt_argc
+        opt_argv = argspec.args[req_argc:]
+        if func.pass_msg:
+            req_argv = argspec.args[1:req_argc]
         else:
-            pass
+            req_argv = argspec.args[:req_argc]
+        if func.pass_msg:
+            req_argc -= 1
+        defaults = argspec.defaults
+        return Bunch(opt_argc=opt_argc,
+                     req_argc=req_argc,
+                     opt_argv=opt_argv,
+                     req_argv=req_argv,
+                     defaults=defaults)
+
+    def get_syntax_msg(self, func):
+        spec = self.get_func_spec(func)
+        str_req_argv = ' '.join(['(' + arg + ')' for arg in spec.req_argv])
+        if spec.defaults is None:
+            str_opt_argv = ''
+        else:
+            str_opt_argv = ' '.join(['[{}={}]'.format(arg[0], arg[1]) for arg in zip(spec.opt_argv, spec.defaults)])
+        if func.__doc__ is None:
+            doc = ''
+        else:
+            doc = '\n\t' + func.__doc__
+        return func.__name__ + ' ' * bool(spec.req_argc) + str_req_argv + ' ' * bool(spec.opt_argc) + str_opt_argv + doc
 
     async def say(self, *args, **kwargs):
         await self.client.send_message(self._current_message.channel, *args, **kwargs)
+
+    async def command_not_found(self, message):
+        pass
+
+    async def not_enough_args(self, syntax_msg):
+        await self.say('```Not enough arguments.\nSyntax: `' + syntax_msg + '```')
