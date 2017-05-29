@@ -5,7 +5,7 @@ import time
 import os
 import logging
 from wordnik import *
-from random import randint
+from random import random
 from collections import OrderedDict
 from traceback import format_exc
 from sys import exc_info
@@ -61,9 +61,7 @@ async def gettime():
 @bot.command()
 async def roulette():
     """Play Russian Roulette."""
-    global roulette_counter
-    if randint(1, 6) == 6 or roulette_counter == 6:
-        roulette_counter = 0
+    if random() <= 0.1666:
         await bot.say('''```
 BBBBBBBBBBBBBBBBB               AAA               NNNNNNNN        NNNNNNNN        GGGGGGGGGGGGG
 B::::::::::::::::B             A:::A              N:::::::N       N::::::N     GGG::::::::::::G
@@ -82,9 +80,7 @@ B:::::::::::::::::BA:::::A               A:::::A  N::::::N       N:::::::N   GG:
 B::::::::::::::::BA:::::A                 A:::::A N::::::N        N::::::N     GGG::::::GGG:::G
 BBBBBBBBBBBBBBBBBAAAAAAA                   AAAAAAANNNNNNNN         NNNNNNN        GGGGGG   GGGG```''')
     else:
-        roulette_counter += 1
         await bot.say('click')
-roulette_counter = 0
 
 
 @bot.command()
