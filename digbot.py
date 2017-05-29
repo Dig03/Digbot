@@ -58,6 +58,9 @@ async def gettime():
     await bot.say(time.strftime('It is %a, %d %b %Y %H:%M:%S.', time.localtime()))
 
 
+roulette_counter = 0
+
+
 @bot.command()
 async def roulette():
     """Play Russian Roulette."""
@@ -85,7 +88,6 @@ BBBBBBBBBBBBBBBBBAAAAAAA                   AAAAAAANNNNNNNN         NNNNNNN      
         global roulette_counter
         roulette_counter += 1
         await bot.say('click')
-roulette_counter = 0
 
 
 @bot.command()
