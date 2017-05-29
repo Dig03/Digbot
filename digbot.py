@@ -61,7 +61,9 @@ async def gettime():
 @bot.command()
 async def roulette():
     """Play Russian Roulette."""
-    if randint(1, 6) == 6:
+    if randint(1, 6) == 6 or roulette_counter == 6:
+        global roulette_counter
+        roulette_counter = 0
         await bot.say('''```
 BBBBBBBBBBBBBBBBB               AAA               NNNNNNNN        NNNNNNNN        GGGGGGGGGGGGG
 B::::::::::::::::B             A:::A              N:::::::N       N::::::N     GGG::::::::::::G
@@ -80,7 +82,10 @@ B:::::::::::::::::BA:::::A               A:::::A  N::::::N       N:::::::N   GG:
 B::::::::::::::::BA:::::A                 A:::::A N::::::N        N::::::N     GGG::::::GGG:::G
 BBBBBBBBBBBBBBBBBAAAAAAA                   AAAAAAANNNNNNNN         NNNNNNN        GGGGGG   GGGG```''')
     else:
+        global roulette_counter
+        roulette_counter += 1
         await bot.say('click')
+roulette_counter = 0
 
 
 @bot.command()
