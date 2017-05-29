@@ -16,7 +16,7 @@ class Bot:
         self.client = client
         self.commands = OrderedDict()
 
-    def cmd(self, pass_msg=False):
+    def command(self, pass_msg=False):
         def dec(func):
             name = func.__name__
             if name in self.commands:

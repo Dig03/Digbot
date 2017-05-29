@@ -31,13 +31,13 @@ client = discord.Client()
 bot = discordbot.Bot('!', client)
 
 
-@bot.cmd()
+@bot.command()
 async def echo(text):
     """Repeat given text back to user."""
     await bot.say(text)
 
 
-@bot.cmd()
+@bot.command()
 async def help(command='all'):
     """List available commands."""
     if command == 'all':
@@ -52,13 +52,13 @@ async def help(command='all'):
             await bot.say('```Command not found.```')
 
 
-@bot.cmd()
+@bot.command()
 async def gettime():
     """Get the current local time of the bot."""
     await bot.say(time.strftime('It is %a, %d %b %Y %H:%M:%S.', time.localtime()))
 
 
-@bot.cmd()
+@bot.command()
 async def roulette():
     """Play Russian Roulette."""
     if randint(1, 6) == 6:
@@ -83,7 +83,7 @@ BBBBBBBBBBBBBBBBBAAAAAAA                   AAAAAAANNNNNNNN         NNNNNNN      
         await bot.say('click')
 
 
-@bot.cmd()
+@bot.command()
 async def dice(count=1, sides=6):
     """Roll (a) di(e/ce)."""
     try:
@@ -109,7 +109,7 @@ def uniques(seq):
     return [x for x in seq if not (x in seen or seen_add(x))]
 
 
-@bot.cmd()
+@bot.command()
 async def define(word):
     """Get dictionary definitions of words."""
     word = word.lower()
