@@ -38,13 +38,6 @@ async def echo(text):
 
 
 @bot.command()
-@bot.permissions(administrator=True)
-async def adminonly():
-    """Permissions test."""
-    await bot.say('True')
-
-
-@bot.command()
 async def help(command='all'):
     """List available commands."""
     if command == 'all':
