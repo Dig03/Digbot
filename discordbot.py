@@ -68,6 +68,7 @@ class Bot:
 
             if hasattr(func, 'perms'):
                 if not self.has_permissions(message, func.perms):
+                    await self.insufficient_permissions(message)
                     return
 
             spec = self.get_func_spec(func)
@@ -138,5 +139,5 @@ class Bot:
     async def not_enough_args(self, syntax_msg):
         await self.say('```Not enough arguments.\nSyntax: `' + syntax_msg + '```')
 
-    async def insufficient_permissions(self):
-        pass
+    async def insufficient_permissions(self, message):
+        await self.say('```You do not have sufficient permissions to run this command.```')
