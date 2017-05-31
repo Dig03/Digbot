@@ -128,7 +128,7 @@ class Bot:
             doc = ''
         else:
             doc = '\n\t' + func.__doc__
-        return self.prefix + func.__name__ + ' ' * bool(spec.req_argc) + str_req_argv + ' ' * bool(spec.opt_argc) + str_opt_argv + doc
+        return func.__name__ + ' ' * bool(spec.req_argc) + str_req_argv + ' ' * bool(spec.opt_argc) + str_opt_argv + doc
 
     async def say(self, *args, **kwargs):
         await self.client.send_message(self._current_message.channel, *args, **kwargs)

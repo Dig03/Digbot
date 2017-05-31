@@ -44,7 +44,7 @@ async def help(command='all'):
         syntax_msgs = []
         for func in bot.commands.values():
             syntax_msgs.append(bot.get_syntax_msg(func))
-        await bot.say('```' + 'Syntax: ' + bot.prefix + 'command (required arg) [optional arg=default value]\n\n' + '\n'.join(syntax_msgs) + '```')
+        await bot.say('```Syntax: ' + bot.prefix + 'command (required arg) [optional arg=default value]\n\n' + '\n'.join(syntax_msgs) + '```')
     else:
         if command in bot.commands:
             await bot.say('```\n' + bot.get_syntax_msg(bot.commands[command]) + '```')
