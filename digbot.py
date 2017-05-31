@@ -44,7 +44,7 @@ async def help(command='all'):
         syntax_msgs = []
         for func in bot.commands.values():
             syntax_msgs.append(bot.get_syntax_msg(func))
-        await bot.say('```' + 'Syntax: `command (required arg) [optional arg=default value]\n\n' + '\n'.join(syntax_msgs) + '```')
+        await bot.say('```' + 'Syntax: ' + bot.prefix + 'command (required arg) [optional arg=default value]\n\n' + '\n'.join(syntax_msgs) + '```')
     else:
         if command in bot.commands:
             await bot.say('```\n' + bot.get_syntax_msg(bot.commands[command]) + '```')
@@ -103,6 +103,12 @@ async def dice(count=1, sides=6):
             await bot.say(' '.join(dice))
 
 
+@bot.command()
+async def embed(title, description):
+    em = discord.Embed(title=title, description=description)
+    await bot.say(embed=em)
+
+
 def uniques(seq):
     seen = set()
     seen_add = seen.add
@@ -119,17 +125,17 @@ async def define(word):
     if definitions is None:
         await bot.say('**No definition found.**')
     else:
-        partsofspeech = uniques([d.partOfSpeech for d in definitions])
+        parts_of_speech = uniques([d.partOfSpeech for d in definitions])
         parsed_defs = OrderedDict()
-        for partofspeech in partsofspeech:
-            parsed_defs[partofspeech] = []
+        for part_of_speech in parts_of_speech:
+            parsed_defs[part_of_speech] = []
         for definition in definitions:
             parsed_defs[definition.partOfSpeech].append(definition.text)
         definition_string = ''
-        for partofspeech in parsed_defs:
-            definition_string += '{}:\n'.format(partofspeech.replace('-', ' '))
+        for part_of_speech in parsed_defs:
+            definition_string += '{}:\n'.format(part_of_speech.replace('-', ' '))
             pos = 1
-            for text in parsed_defs[partofspeech]:
+            for text in parsed_defs[part_of_speech]:
                 definition_string += '\t{}. {}\n'.format(pos, text)
                 pos += 1
         await bot.say('```' + definition_string + '```')

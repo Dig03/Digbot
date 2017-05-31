@@ -56,12 +56,6 @@ class Bot:
         else:
             pass
 
-    def has_permissions(self, message, perms):
-        if message.author.id == self.owner_id:
-            return True
-        resolved = message.channel.permissions_for(message.author)
-        return all(getattr(resolved, perm, None) == value for perm, value in perms.items())
-
     async def do_func(self, message, command, args):
         if command in self.commands:
             func = self.commands[command]
@@ -99,6 +93,12 @@ class Bot:
         else:
             await self.command_not_found(message)
 
+    def has_permissions(self, message, perms):
+        if message.author.id == self.owner_id:
+            return True
+        resolved = message.channel.permissions_for(message.author)
+        return all(getattr(resolved, perm, None) == value for perm, value in perms.items())
+
     def get_func_spec(self, func):
         argspec = inspect.getfullargspec(func)
         opt_argc = 0 if argspec.defaults is None else len(argspec.defaults)
@@ -128,7 +128,7 @@ class Bot:
             doc = ''
         else:
             doc = '\n\t' + func.__doc__
-        return func.__name__ + ' ' * bool(spec.req_argc) + str_req_argv + ' ' * bool(spec.opt_argc) + str_opt_argv + doc
+        return self.prefix + func.__name__ + ' ' * bool(spec.req_argc) + str_req_argv + ' ' * bool(spec.opt_argc) + str_opt_argv + doc
 
     async def say(self, *args, **kwargs):
         await self.client.send_message(self._current_message.channel, *args, **kwargs)
@@ -137,7 +137,7 @@ class Bot:
         pass
 
     async def not_enough_args(self, syntax_msg):
-        await self.say('```Not enough arguments.\nSyntax: `' + syntax_msg + '```')
+        await self.say('```Not enough arguments.\nSyntax: ' + syntax_msg + '```')
 
     async def insufficient_permissions(self, message):
         await self.say('```You do not have sufficient permissions to run this command.```')
