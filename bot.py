@@ -113,7 +113,7 @@ async def define(word):
             for text in parsed_defs[part_of_speech]:
                 definition_string += '\t{}. {}\n'.format(pos, text)
                 pos += 1
-
+        await bot.say('```' + definition_string + '```')
 
 tokens = {}
 tokens['discord'] = os.getenv('discord')
