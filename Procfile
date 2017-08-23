@@ -1,1 +1,1 @@
-worker: python digbot.py
+worker: python bot.py

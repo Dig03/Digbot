@@ -1,14 +1,13 @@
 import discord
-import discordbot
+from discord.ext import commands
 import asyncio
 import time
 import os
 import logging
+import markovify
+import random
 from wordnik import *
-from random import random
 from collections import OrderedDict
-from traceback import format_exc
-from sys import exc_info
 
 main_logger = logging.getLogger('main')
 main_logger.setLevel(logging.INFO)
@@ -26,30 +25,19 @@ discord_console.setLevel(logging.ERROR)
 discord_console.setFormatter(formatter)
 discord_logger.addHandler(discord_console)
 
+bot = commands.Bot(command_prefix='`', description='A shitty bot.', command_not_found='Command {} not found.')
 
-client = discord.Client()
-bot = discordbot.Bot('!', client, '196391063987027969')
+
+@bot.event
+async def on_ready():
+    main_logger.info('Logged in as {}, with ID {}'.format(bot.user.name, bot.user.id))
+    await bot.change_presence(game=discord.Game(name='Type `help'))
 
 
 @bot.command()
 async def echo(text):
     """Repeat given text back to user."""
     await bot.say(text)
-
-
-@bot.command()
-async def help(command='all'):
-    """List available commands."""
-    if command == 'all':
-        syntax_msgs = []
-        for func in bot.commands.values():
-            syntax_msgs.append(bot.get_syntax_msg(func))
-        await bot.say('```Syntax: ' + bot.prefix + 'command (required arg) [optional arg=default value]\n\n' + '\n'.join(syntax_msgs) + '```')
-    else:
-        if command in bot.commands:
-            await bot.say('```\n' + bot.get_syntax_msg(bot.commands[command]) + '```')
-        else:
-            await bot.say('```Command not found.```')
 
 
 @bot.command()
@@ -61,7 +49,7 @@ async def gettime():
 @bot.command()
 async def roulette():
     """Play Russian Roulette."""
-    if random() <= 0.1666:
+    if random.random() <= 0.1666:
         await bot.say('''```
 BBBBBBBBBBBBBBBBB               AAA               NNNNNNNN        NNNNNNNN        GGGGGGGGGGGGG
 B::::::::::::::::B             A:::A              N:::::::N       N::::::N     GGG::::::::::::G
@@ -84,29 +72,16 @@ BBBBBBBBBBBBBBBBBAAAAAAA                   AAAAAAANNNNNNNN         NNNNNNN      
 
 
 @bot.command()
-async def dice(count=1, sides=6):
-    """Roll (a) di(e/ce)."""
+async def roll(dice):
+    """Roll an NdN dice."""
     try:
-        sides = int(sides)
-        count = int(count)
-    except ValueError:
-        await bot.say('Invalid arguments, make sure both are numbers.')
-    else:
-        if sides < 1:
-            await bot.say('Invalid number of sides.')
-        elif count < 1:
-            await bot.say('Invalid number of dice.')
-        elif count > 100 or sides > 100:
-            await bot.say('Too many dice or sides, please try with numbers at or below 100.')
-        else:
-            dice = [str(randint(1, sides)) for _ in range(count)]
-            await bot.say(' '.join(dice))
+        count, sides = map(int, dice.split('d'))
+    except Exception:
+        await bot.say('Format must be NdN.')
+        return
 
-
-@bot.command()
-async def embed(title, description):
-    em = discord.Embed(title=title, description=description)
-    await bot.say(embed=em)
+    result = ', '.join(str(random.randint(1, sides)) for r in range(rolls))
+    await bot.say(result)
 
 
 def uniques(seq):
@@ -123,7 +98,7 @@ async def define(word):
     if definitions is None:
         definitions = wordApi.getDefinitions(word, sourceDictionaries='ahd')
     if definitions is None:
-        await bot.say('**No definition found.**')
+        await bot.say('No definition found.')
     else:
         parts_of_speech = uniques([d.partOfSpeech for d in definitions])
         parsed_defs = OrderedDict()
@@ -138,30 +113,7 @@ async def define(word):
             for text in parsed_defs[part_of_speech]:
                 definition_string += '\t{}. {}\n'.format(pos, text)
                 pos += 1
-        await bot.say('```' + definition_string + '```')
 
-
-@client.event
-async def on_ready():
-    main_logger.info('Logged in as {}, with ID {}'.format(client.user.name, client.user.id))
-    await client.change_presence(game=discord.Game(name='Type !help'))
-
-
-@client.event
-async def on_error(event, *args, **kwargs):
-    if exc_info()[0] is discord.errors.HTTPException:
-        await bot.say('**Unable to process command, the response text is >2000 characters.**')
-    else:
-        main_logger.error(format_exc())
-        if event == 'on_message':
-            message = args[0]
-            main_logger.error('Message content: ' + message.content)
-            await bot.say('**An internal error occured. This event has been automatically logged.**')
-
-
-@client.event
-async def on_message(message):
-    await bot.run(message)
 
 tokens = {}
 tokens['discord'] = os.getenv('discord')
@@ -170,4 +122,4 @@ if None in tokens.values():
     raise EnvironmentError('tokens missing, cannot launch')
 
 wordApi = WordApi.WordApi(swagger.ApiClient(tokens['wordnik'], 'http://api.wordnik.com/v4'))
-client.run(tokens['discord'])
+bot.run(tokens['discord'])
