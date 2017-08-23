@@ -145,7 +145,7 @@ async def define(word):
 @bot.command()
 async def sendaftern(n):
     """Ping after N seconds."""
-    time.sleep(n)
+    time.sleep(int(n))
     await bot.say('Said after {} seconds.'.format(n))
 
 
