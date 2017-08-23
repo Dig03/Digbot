@@ -129,6 +129,12 @@ async def define(word):
                 pos += 1
         await bot.say('```' + definition_string + '```')
 
+
+@bot.command()
+async def playing(name):
+    """Debug command."""
+    await bot.change_presence(game=discord.Game(name=name))
+
 tokens = {}
 tokens['discord'] = os.getenv('discord')
 tokens['wordnik'] = os.getenv('wordnik')
