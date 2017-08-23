@@ -8,6 +8,8 @@ import markovify
 import random
 from wordnik import *
 from collections import OrderedDict
+from traceback import format_exc
+from sys import exc_info
 
 main_logger = logging.getLogger('main')
 main_logger.setLevel(logging.INFO)
@@ -32,6 +34,18 @@ bot = commands.Bot(command_prefix='`', description='A shitty bot.', command_not_
 async def on_ready():
     main_logger.info('Logged in as {}, with ID {}'.format(bot.user.name, bot.user.id))
     await bot.change_presence(game=discord.Game(name='Type `help'))
+
+
+@bot.event
+async def on_error(event, *args, **kwargs):
+    if exc_info()[0] is discord.errors.HTTPException:
+        await bot.say('Unable to process command, the response text is >2000 characters.')
+    else:
+        main_logger.error(format_exc())
+        if event == 'on_message':
+            message = args[0]
+            main_logger.error('Message content: ' + message.content)
+            await bot.say('An internal error occured. This event has been automatically logged.')
 
 
 @bot.command()
