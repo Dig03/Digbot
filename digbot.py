@@ -2,7 +2,6 @@ import discord
 import discordbot
 import asyncio
 import time
-import markovify
 import os
 import logging
 from wordnik import *
@@ -140,13 +139,6 @@ async def define(word):
                 definition_string += '\t{}. {}\n'.format(pos, text)
                 pos += 1
         await bot.say('```' + definition_string + '```')
-
-
-@bot.command()
-async def sendaftern(n):
-    """Ping after N seconds."""
-    time.sleep(int(n))
-    await bot.say('Said after {} seconds.'.format(n))
 
 
 @client.event
