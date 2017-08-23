@@ -80,7 +80,7 @@ async def roll(dice):
         await bot.say('Format must be NdN.')
         return
 
-    result = ', '.join(str(random.randint(1, sides)) for r in range(rolls))
+    result = ', '.join(str(random.randint(1, sides)) for r in range(count))
     await bot.say(result)
 
 
