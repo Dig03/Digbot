@@ -23,7 +23,7 @@ main_console.setFormatter(formatter)
 main_logger.addHandler(main_console)
 
 discord_console = logging.StreamHandler()
-discord_console.setLevel(logging.ERROR)
+discord_console.setLevel(logging.DEBUG)
 discord_console.setFormatter(formatter)
 discord_logger.addHandler(discord_console)
 
