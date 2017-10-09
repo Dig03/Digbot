@@ -4,7 +4,6 @@ import asyncio
 import time
 import os
 import logging
-import markovify
 import random
 from wordnik import *
 from collections import OrderedDict

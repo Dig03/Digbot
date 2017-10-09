@@ -1,3 +1,2 @@
 discord.py
 wordnik-py3
-markovify
