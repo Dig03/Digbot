@@ -93,7 +93,7 @@ async def roll(dice):
         await bot.say('Format must be NdN.')
         return
 
-    if count > 101 or sides > 101:
+    if count > 100 or sides > 1000:
         await bot.say('Too many dice or sides.')
         return
 
