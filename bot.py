@@ -36,7 +36,7 @@ async def on_ready():
 
 
 @bot.event
-async def on_error(event, *args, **kwargs):
+async def on_error(event, *args):
     if exc_info()[0] is discord.errors.HTTPException:
         await bot.say('Unable to process command, the response text is >2000 characters.')
     else:
@@ -89,7 +89,7 @@ async def roll(dice):
     """Roll an NdN dice."""
     try:
         count, sides = map(int, dice.split('d'))
-    except Exception:
+    except TypeError:
         await bot.say('Format must be NdN.')
         return
 
@@ -97,7 +97,7 @@ async def roll(dice):
         await bot.say('Too many dice or sides.')
         return
 
-    result = ', '.join(str(random.randint(1, sides)) for r in range(count))
+    result = ', '.join(str(random.randint(1, sides)) for _ in range(count))
     await bot.say(result)
 
 
@@ -133,9 +133,7 @@ async def define(word):
         await bot.say('```' + definition_string + '```')
 
 
-tokens = {}
-tokens['discord'] = os.getenv('discord')
-tokens['wordnik'] = os.getenv('wordnik')
+tokens = {'discord': os.getenv('discord'), 'wordnik': os.getenv('wordnik')}
 if None in tokens.values():
     raise EnvironmentError('tokens missing, cannot launch')
 
