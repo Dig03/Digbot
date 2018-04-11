@@ -36,7 +36,7 @@ async def on_ready():
 
 
 @bot.event
-async def on_error(event, *args):
+async def on_error(event, *args, **kwargs):
     if exc_info()[0] is discord.errors.HTTPException:
         await bot.say('Unable to process command, the response text is >2000 characters.')
     else:
@@ -44,7 +44,7 @@ async def on_error(event, *args):
         if event == 'on_message':
             message = args[0]
             main_logger.error('Message content: ' + message.content)
-            await bot.say('An internal error occured. This event has been automatically logged.')
+            await bot.say('An internal error occurred. This event has been automatically logged.')
 
 
 @bot.command()
@@ -89,7 +89,7 @@ async def roll(dice):
     """Roll an NdN dice."""
     try:
         count, sides = map(int, dice.split('d'))
-    except TypeError:
+    except ValueError:
         await bot.say('Format must be NdN.')
         return
 
