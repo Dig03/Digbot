@@ -26,13 +26,13 @@ discord_console.setLevel(logging.ERROR)
 discord_console.setFormatter(formatter)
 discord_logger.addHandler(discord_console)
 
-bot = commands.Bot(command_prefix='`', description='A shitty bot.', command_not_found='Command {} not found.')
+bot = commands.Bot(command_prefix='.', description='A shitty bot.', command_not_found='Command {} not found.')
 
 
 @bot.event
 async def on_ready():
     main_logger.info('Logged in as {}, with ID {}'.format(bot.user.name, bot.user.id))
-    await bot.change_presence(game=discord.Game(name='Type `help'))
+    await bot.change_presence(game=discord.Game(name='Type {}help'.format(bot.command_prefix)))
 
 
 @bot.event
