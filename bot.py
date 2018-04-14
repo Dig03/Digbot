@@ -35,7 +35,7 @@ bot.tokens = {'discord': getenv('discord'), 'wordnik': getenv('wordnik')}
 if None in bot.tokens.values():
     raise EnvironmentError('Tokens missing, cannot launch.')
 
-extensions = ('cogs.utility', 'cogs.fun')
+extensions = ('cogs.utility', 'cogs.fun', 'cogs.members')
 
 for extension in extensions:
     bot.load_extension(extension)
