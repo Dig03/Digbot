@@ -47,6 +47,31 @@ BBBBBBBBBBBBBBBBBAAAAAAA                   AAAAAAANNNNNNNN         NNNNNNN      
         else:
             await self.bot.say("click")
 
+    @commands.command(pass_context=True)
+    async def guess(self, ctx, imin: int, imax: int, tries: int = 3):
+        """What number am I thinking of?"""
+        if imax < 0 or imin < 0 or imin > imax:
+            await self.bot.say("That doesn't make sense.")
+        elif imax - imin < 3:
+            await self.bot.say("That's too easy.")
+        else:
+            i = random.randint(imin, imax)
+            await self.bot.say("I've got a number, what's your guess?")
+            for n in range(tries):
+                try:
+                    guess = await self.bot.wait_for_message(author=ctx.message.author, channel=ctx.message.channel)
+                    guess = int(guess.content)
+                except ValueError:
+                    await self.bot.say("That isn't a number.")
+                else:
+                    if i == guess:
+                        await self.bot.say("Correct. Good job.")
+                        break
+                    else:
+                        t = tries - n - 1
+                        await self.bot.say("Wrong. You have {} tr{} left.".format(t, 'ies' if t != 1 else 'y'))
+            await self.bot.say("The number was {}.".format(i))
+
 
 def setup(bot):
     bot.add_cog(Fun(bot))
