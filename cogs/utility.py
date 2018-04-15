@@ -2,16 +2,7 @@ from discord.ext import commands
 import time
 from wordnik import WordApi, swagger
 from collections import OrderedDict
-
-
-def page(string, length):
-    return [string[start:start + length] for start in range(0, len(string), length)]
-
-
-def uniques(seq):
-    seen = set()
-    seen_add = seen.add
-    return [x for x in seq if not (x in seen or seen_add(x))]
+from .func import paginator, util
 
 
 class Utility:
@@ -41,7 +32,7 @@ class Utility:
         if definitions is None:
             await self.bot.say("No definition found.")
         else:
-            parts_of_speech = uniques([d.partOfSpeech for d in definitions])
+            parts_of_speech = util.uniques([d.partOfSpeech for d in definitions])
             parsed_defs = OrderedDict()
             for part_of_speech in parts_of_speech:
                 parsed_defs[part_of_speech] = []
@@ -54,12 +45,8 @@ class Utility:
                 for text in parsed_defs[part_of_speech]:
                     definition_string += '\t{}. {}\n'.format(pos, text)
                     pos += 1
-            if len(definition_string) + 6 > 2000:
-                paged = page(definition_string, 1994)
-                for string in paged:
-                    await self.bot.say("```{}```".format(string))
-            else:
-                await self.bot.say("```{}```".format(definition_string))
+            for page in paginator.paginate(definition_string, 2000, '```', '```'):
+                await self.bot.say(page)
 
 
 def setup(bot):
