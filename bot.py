@@ -3,6 +3,7 @@ from discord.ext import commands
 import asyncio
 import logging
 from os import getenv
+import traceback
 
 logger = logging.getLogger('main')
 logger.setLevel(logging.INFO)
@@ -27,15 +28,29 @@ async def on_ready():
 
 
 @bot.event
-async def on_command_error(exception, context):
-    logger.error("Encountered exception: {}, as a result of message: '{}'".format(exception, context.message.content))
+async def on_error(event, *args, **kwargs):
+    logger.error("Encountered internal error:")
+    logger.error(traceback.format_exc())
+    logger.error("During event:")
+    logger.error(event)
+    logger.error("With args & kwargs:")
+    logger.error("args: {}; kwargs: {}".format(args, kwargs))
+
+
+@bot.event
+async def on_command_error(exception, ctx):
+    logger.error("Encountered command exception:")
+    logger.error(exception)
+    logger.error("This is as a result of the message:")
+    logger.error(ctx.message.content)
+    logger.error('By user "{0}" with ID {0.id}'.format(ctx.message.author))
 
 
 bot.tokens = {'discord': getenv('discord'), 'wordnik': getenv('wordnik')}
 if None in bot.tokens.values():
     raise EnvironmentError('Tokens missing, cannot launch.')
 
-extensions = ('cogs.utility', 'cogs.fun', 'cogs.members')
+extensions = ('cogs.utility', 'cogs.fun', 'cogs.members', 'cogs.admin')
 
 for extension in extensions:
     bot.load_extension(extension)
