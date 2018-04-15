@@ -52,7 +52,7 @@ BBBBBBBBBBBBBBBBBAAAAAAA                   AAAAAAANNNNNNNN         NNNNNNN      
         """What number am I thinking of?"""
         if imax < 0 or imin < 0 or imin > imax:
             await self.bot.say("That doesn't make sense.")
-        elif imax - imin < 3:
+        elif imax - imin < tries:
             await self.bot.say("That's too easy.")
         else:
             i = random.randint(imin, imax)
