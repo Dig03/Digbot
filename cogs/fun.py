@@ -59,7 +59,11 @@ BBBBBBBBBBBBBBBBBAAAAAAA                   AAAAAAANNNNNNNN         NNNNNNN      
             await self.bot.say("I've got a number, what's your guess?")
             for n in range(tries):
                 try:
-                    guess = await self.bot.wait_for_message(author=ctx.message.author, channel=ctx.message.channel)
+                    guess = await self.bot.wait_for_message(timeout=30, author=ctx.message.author,
+                                                            channel=ctx.message.channel)
+                    if guess is None:
+                        await self.bot.say("Timed out while waiting for a response.")
+                        break
                     guess = int(guess.content)
                 except ValueError:
                     await self.bot.say("That isn't a number.")
