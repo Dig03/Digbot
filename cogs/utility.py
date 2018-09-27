@@ -29,7 +29,7 @@ class Utility:
         text = text.split()
         rev_text = []
         for word in text[::-1]:
-            if word.startswith(':') and word.endswith(':'):
+            if word.startswith(':') and word.endswith(':') or word.startswith('<') and word.endswith('>'):
                 rev_text.append(word)
             else:
                 rev_text.append(word[::-1])
