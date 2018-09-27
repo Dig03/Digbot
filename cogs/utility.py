@@ -1,4 +1,5 @@
 from discord.ext import commands
+from discord import Member, Embed
 import time
 from wordnik import WordApi, swagger
 from collections import OrderedDict
@@ -21,6 +22,18 @@ class Utility:
     async def get_time(self):
         """Get the current local time of the bot."""
         await self.bot.say(time.strftime("It is %a, %d %b %Y %H:%M:%S", time.localtime()))
+
+    @commands.command()
+    async def reverse(self, *, text):
+        """Reverse some text."""
+        text = text.split()
+        rev_text = []
+        for word in text[::-1]:
+            if word.startswith(':') and word.endswith(':'):
+                rev_text.append(word)
+            else:
+                rev_text.append(word[::-1])
+        await self.bot.say(' '.join(rev_text))
 
     @commands.command()
     async def define(self, word):
