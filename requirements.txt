@@ -1,2 +1,2 @@
-discord.py
+git+git://github.com/Rapptz/discord.py/archive/rewrite.zip
 wordnik-py3
