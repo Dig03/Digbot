@@ -37,12 +37,11 @@ async def on_error(event, *args, **kwargs):
 
 
 @bot.event
-async def on_command_error(exception, ctx):
-    logger.error("Encountered command exception:")
-    logger.error(exception)
-    logger.error("This is as a result of the message:")
-    logger.error(ctx.message.content)
-    logger.error('By user "{0}" with ID {0.id}'.format(ctx.message.author))
+async def on_command_error(ctx, exception):
+    logger.error("Encountered command exception.")
+    logger.error("Message: \"{0}\" by user {1} with ID {1.id}".format(ctx.message.content, ctx.message.author))
+    logger.error("=== EXCEPTION ===")
+    logger.error("".join(traceback.format_exception(type(exception), exception, exception.__traceback__)))
 
 
 bot.tokens = {'discord': getenv('discord'), 'wordnik': getenv('wordnik')}
