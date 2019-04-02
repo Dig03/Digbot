@@ -17,7 +17,7 @@ logger.addHandler(console)
 discord_logger.addHandler(console)
 
 
-bot = commands.Bot(command_prefix=',', description="A shitty bot.")
+bot = commands.Bot(command_prefix='.', description="A shitty bot.")
 
 
 @bot.event
