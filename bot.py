@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-import asyncio
 import logging
 from os import getenv
 import traceback
