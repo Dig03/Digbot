@@ -17,13 +17,13 @@ logger.addHandler(console)
 discord_logger.addHandler(console)
 
 
-bot = commands.Bot(command_prefix='.', description="A shitty bot.")
+bot = commands.Bot(command_prefix=',', description="A shitty bot.")
 
 
 @bot.event
 async def on_ready():
     logger.info("Ready! Username: {}, ID: {}.".format(bot.user.name, bot.user.id))
-    await bot.change_presence(game=discord.Game(name="Type {}help".format(bot.command_prefix)))
+    await bot.change_presence(activity=discord.Game(name="Type {}help".format(bot.command_prefix)))
 
 
 @bot.event
