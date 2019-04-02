@@ -19,7 +19,8 @@ class Members(commands.Cog, name="Members"):
         embed.add_field(name='Discriminator', value=member.discriminator, inline=False)
         embed.add_field(name='ID', value=member.id, inline=False)
         embed.add_field(name='Bot', value='Yes' if member.bot else 'No', inline=False)
-        embed.add_field(name='Avatar URL', value=member.avatar_url if not '' else member.default_avatar_url, inline=False)
+        embed.add_field(name='Avatar URL', value=member.avatar_url if not '' else member.default_avatar_url,
+                        inline=False)
         embed.add_field(name='Creation time', value=member.created_at, inline=False)
         await ctx.send(embed=embed)
 
