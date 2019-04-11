@@ -1,5 +1,6 @@
 from discord.ext import commands
 import time
+from urllib.error import HTTPError
 from wordnik import WordApi, swagger
 import urbandict
 from collections import OrderedDict
@@ -38,10 +39,8 @@ class Utility(commands.Cog, name="Utility"):
     @commands.command()
     async def urban(self, ctx, *, word):
         """Get urban dictionary definitions."""
-        definitions = urbandict.define(word)
-        if len(definitions) == 0:
-            await ctx.send("No urban dictionary definition found.")
-        else:
+        try:
+            definitions = urbandict.define(word)
             definition_string = ""
             pos = 1
             for definition in definitions:
@@ -53,6 +52,8 @@ class Utility(commands.Cog, name="Utility"):
                 pos += 1
             for page in paginator.paginate(definition_string, 2000, '```', '```'):
                 await ctx.send(page)
+        except HTTPError:
+            await ctx.send("No Urban Dictionary definition found.")
 
     @commands.command()
     async def define(self, ctx, *, word):
