@@ -35,7 +35,7 @@ class Utility(commands.Cog, name="Utility"):
         await ctx.send(' '.join(rev_text))
 
     @commands.command()
-    async def define(self, ctx, word):
+    async def define(self, ctx, *, word):
         """Get dictionary definitions of words."""
         word = word.lower()
         definitions = self.word_api.getDefinitions(word, sourceDictionaries='wiktionary')
