@@ -1,6 +1,7 @@
 from discord.ext import commands
 import time
 from wordnik import WordApi, swagger
+import urbandict
 from collections import OrderedDict
 from .func import paginator, util
 
@@ -35,6 +36,25 @@ class Utility(commands.Cog, name="Utility"):
         await ctx.send(' '.join(rev_text))
 
     @commands.command()
+    async def urban(self, ctx, *, word):
+        """Get urban dictionary definitions."""
+        definitions = urbandict.define(word)
+        if len(definitions) == 0:
+            await ctx.send("No urban dictionary definition found.")
+        else:
+            definition_string = ""
+            pos = 1
+            for definition in definitions:
+                text = definition["def"]
+                example = definition["example"]
+                definition_string += '{}:\n{}\n'.format(pos, text)
+                if len(example) != 0:
+                    definition_string += '\n\tFor example:\n\n{}.\n\n'.format(example)
+                pos += 1
+            for page in paginator.paginate(definition_string, 2000, '```', '```'):
+                await ctx.send(page)
+
+    @commands.command()
     async def define(self, ctx, *, word):
         """Get dictionary definitions of words."""
         word = word.lower()
@@ -57,6 +77,7 @@ class Utility(commands.Cog, name="Utility"):
                 for text in parsed_defs[part_of_speech]:
                     definition_string += '\t{}. {}\n'.format(pos, text)
                     pos += 1
+            # TODO: Export constants to an import (e.g. message char limit of 2000)
             for page in paginator.paginate(definition_string, 2000, '```', '```'):
                 await ctx.send(page)
 
