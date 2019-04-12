@@ -10,8 +10,14 @@ class Admin(commands.Cog):
     @commands.command(hidden=True)
     async def unload(self, ctx, extension_name):
         """Unload a cog."""
-        self.bot.unload_extension(extension_name)
-        await ctx.send('"{}" unloaded.'.format(extension_name))
+        if extension_name == self.__class__.__module__:
+            await ctx.send("Cannot unload essential cog.")
+        else:
+            try:
+                self.bot.unload_extension(extension_name)
+                await ctx.send('"{}" unloaded.'.format(extension_name))
+            except commands.ExtensionNotLoaded:
+                await ctx.send('Can\'t find "{}".'.format(extension_name))
 
     @checks.is_owner()
     @commands.command(hidden=True)
@@ -19,16 +25,21 @@ class Admin(commands.Cog):
         """Load a cog."""
         try:
             self.bot.load_extension(extension_name)
-        except (ImportError, AttributeError):
+            await ctx.send('"{}" loaded.'.format(extension_name))
+        except commands.ExtensionNotFound:
             await ctx.send('"{}" not found.'.format(extension_name))
-            return
-        await ctx.send('"{}" loaded.'.format(extension_name))
+        except commands.ExtensionAlreadyLoaded:
+            await ctx.send('"{}" is already loaded.'.format(extension_name))
 
     @checks.is_owner()
     @commands.command(hidden=True)
     async def list(self, ctx):
         """List cogs."""
-        await ctx.send("Currently loaded: " + ", ".join(self.bot.cogs.keys()))
+        import_locations = []
+        for cog in self.bot.cogs.values():
+            import_locations.append(cog.__class__.__module__)
+
+        await ctx.send("Currently loaded: " + ", ".join(import_locations))
 
     @checks.is_owner()
     @commands.command(hidden=True)
