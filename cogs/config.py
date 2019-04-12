@@ -19,15 +19,19 @@ class Config(commands.Cog):
             await ctx.send("Key not found.")
 
     @commands.command(hidden=True)
-    async def set(self, ctx, key, *, val):
-        """Set configuration values."""
+    async def set(self, ctx, key, *, val=None):
+        """Set configuration values. If val not given, set to default."""
         try:
-            self.bot.config.set_key(key, val)
-            await ctx.send("{} has been updated.".format(key))
+            if val is not None:
+                self.bot.config.set_val(key, val)
+                await ctx.send("{} has been updated.".format(key))
+            else:
+                self.bot.config.update_default(key)
+                await ctx.send("{} has been set to default.".format(key))
         except KeyError:
             await ctx.send("Key not found.")
-        except TypeError:
-            await ctx.send("Invalid type. Was expecting {}.".format(self.bot.config.get_type(key)))
+        except (TypeError, ValueError):
+            await ctx.send("Invalid type. Was expecting {}.".format(self.bot.config.get_type(key).__name__))
 
     @commands.command(hidden=True)
     async def list_config(self, ctx):
@@ -35,7 +39,7 @@ class Config(commands.Cog):
         result = ""
         cfg = self.bot.config.config_store
         for key in cfg:
-            result += '{} = {}\n'.format(key, cfg[key])
+            result += '{} = {}\n'.format(key, self.bot.config.get_val(key))
         await ctx.send(result)
 
 
