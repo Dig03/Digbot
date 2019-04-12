@@ -1,4 +1,5 @@
 from discord.ext import commands
+from .func import paginator
 import random
 
 
@@ -13,18 +14,25 @@ class Fun(commands.Cog, name="Fun"):
         """Roll NdN di(c)e."""
         try:
             count, sides = map(int, dice.split('d'))
-            if count > 100 or sides > 1000:
+            if count > self.bot.config.dice_count_lim or sides > self.bot.config.dice_sides_lim:
                 await ctx.send("Too many dice or sides.")
             else:
-                result = ', '.join(str(random.randint(1, sides)) for _ in range(count))
-                await ctx.send(result)
+                numbers = []
+
+                async def randint_str(a, b):
+                    return str(random.randint(a, b))
+                for _ in range(count):
+                    numbers.append(await randint_str(1, sides))
+                result = ', '.join(numbers)
+                for page in paginator.paginate(result, 2000):
+                    await ctx.send(page)
         except ValueError:
             await ctx.send("Format must be NdN where each N is an integer.")
 
     @commands.command()
     async def roulette(self, ctx):
         """Play Russian Roulette."""
-        if random.random() <= 1 / 6:
+        if random.random() <= self.bot.config.roulette_prob:
             await ctx.send("""```
 BBBBBBBBBBBBBBBBB               AAA               NNNNNNNN        NNNNNNNN        GGGGGGGGGGGGG
 B::::::::::::::::B             A:::A              N:::::::N       N::::::N     GGG::::::::::::G
