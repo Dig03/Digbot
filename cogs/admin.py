@@ -6,7 +6,9 @@ class Admin(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @checks.is_owner()
+    async def cog_check(self, ctx):
+        return checks.is_owner_bool(ctx)
+
     @commands.command(hidden=True)
     async def unload(self, ctx, extension_name):
         """Unload a cog."""
@@ -19,7 +21,6 @@ class Admin(commands.Cog):
             except commands.ExtensionNotLoaded:
                 await ctx.send('Can\'t find "{}".'.format(extension_name))
 
-    @checks.is_owner()
     @commands.command(hidden=True)
     async def load(self, ctx, extension_name):
         """Load a cog."""
@@ -31,17 +32,14 @@ class Admin(commands.Cog):
         except commands.ExtensionAlreadyLoaded:
             await ctx.send('"{}" is already loaded.'.format(extension_name))
 
-    @checks.is_owner()
     @commands.command(hidden=True)
     async def list(self, ctx):
         """List cogs."""
         import_locations = []
         for cog in self.bot.cogs.values():
             import_locations.append(cog.__class__.__module__)
-
         await ctx.send("Currently loaded: " + ", ".join(import_locations))
 
-    @checks.is_owner()
     @commands.command(hidden=True)
     async def die(self, ctx):
         """Kill bot."""
