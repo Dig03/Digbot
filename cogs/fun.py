@@ -13,14 +13,13 @@ class Fun(commands.Cog, name="Fun"):
         """Roll NdN di(c)e."""
         try:
             count, sides = map(int, dice.split('d'))
+            if count > 100 or sides > 1000:
+                await ctx.send("Too many dice or sides.")
+            else:
+                result = ', '.join(str(random.randint(1, sides)) for _ in range(count))
+                await ctx.send(result)
         except ValueError:
             await ctx.send("Format must be NdN where each N is an integer.")
-            return
-        if count > 100 or sides > 1000:
-            await ctx.send("Too many dice or sides.")
-            return
-        result = ', '.join(str(random.randint(1, sides)) for _ in range(count))
-        await ctx.send(result)
 
     @commands.command()
     async def roulette(self, ctx):
