@@ -1,6 +1,7 @@
 from discord.ext import commands
 from .func import paginator
 import random
+from math import isclose
 
 
 class Fun(commands.Cog, name="Fun"):
@@ -8,6 +9,7 @@ class Fun(commands.Cog, name="Fun"):
 
     def __init__(self, bot):
         self.bot = bot
+        self.roulette_sum = 0
 
     @commands.command()
     async def roll(self, ctx, dice):
@@ -32,7 +34,10 @@ class Fun(commands.Cog, name="Fun"):
     @commands.command()
     async def roulette(self, ctx):
         """Play Russian Roulette."""
-        if random.random() <= self.bot.config.roulette_prob:
+        chance = self.bot.config.roulette_prob
+        should_fire = self.roulette_sum + chance
+        if random.random() <= chance or isclose(should_fire, 1) or should_fire >= 1:
+            self.roulette_sum = 0
             await ctx.send("""```
 BBBBBBBBBBBBBBBBB               AAA               NNNNNNNN        NNNNNNNN        GGGGGGGGGGGGG
 B::::::::::::::::B             A:::A              N:::::::N       N::::::N     GGG::::::::::::G
@@ -52,7 +57,8 @@ B::::::::::::::::BA:::::A                 A:::::A N::::::N        N::::::N     G
 BBBBBBBBBBBBBBBBBAAAAAAA                   AAAAAAANNNNNNNN         NNNNNNN        GGGGGG   GGGG
     ```""")
         else:
-            await ctx.send("click")
+            self.roulette_sum += chance
+            await ctx.send("click".format(self.roulette_sum))
 
     @commands.command()
     async def guess(self, ctx, imin: int, imax: int, tries: int = 3):
