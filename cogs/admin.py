@@ -10,6 +10,19 @@ class Admin(commands.Cog):
         return checks.is_owner_bool(ctx)
 
     @commands.command(hidden=True)
+    async def reload(self, ctx, extension_name):
+        """Reload a cog."""
+        try:
+            self.bot.unload_extension(extension_name)
+            self.bot.load_extension(extension_name)
+            await ctx.send('{} successfully reloaded.'.format(extension_name))
+        except commands.ExtensionNotLoaded:
+            await ctx.send('{} cannot be loaded without first being loaded.'.format(extension_name))
+        except Exception as e:
+            await ctx.send('{} cannot be loaded due to an internal error.'.format(extension_name))
+            raise e
+
+    @commands.command(hidden=True)
     async def unload(self, ctx, extension_name):
         """Unload a cog."""
         if extension_name == self.__class__.__module__:
@@ -31,6 +44,9 @@ class Admin(commands.Cog):
             await ctx.send('"{}" not found.'.format(extension_name))
         except commands.ExtensionAlreadyLoaded:
             await ctx.send('"{}" is already loaded.'.format(extension_name))
+        except Exception as e:
+            await ctx.send('{} cannot be loaded due to an internal error.'.format(extension_name))
+            raise e
 
     @commands.command(hidden=True)
     async def list(self, ctx):
