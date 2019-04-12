@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from cogs.func import config
 import logging
 from os import getenv
 import traceback
@@ -48,9 +49,11 @@ bot.tokens = {'discord': getenv('discord'), 'wordnik': getenv('wordnik')}
 if None in bot.tokens.values():
     raise EnvironmentError('Tokens missing, cannot launch.')
 
-extensions = ('cogs.utility', 'cogs.fun', 'cogs.members', 'cogs.admin')
+extensions = ('cogs.utility', 'cogs.fun', 'cogs.members', 'cogs.admin', 'cogs.config')
 
 for extension in extensions:
     bot.load_extension(extension)
+
+bot.config = config
 
 bot.run(bot.tokens['discord'])
