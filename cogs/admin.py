@@ -7,7 +7,7 @@ class Admin(commands.Cog):
         self.bot = bot
 
     async def cog_check(self, ctx):
-        return checks.is_owner_bool(ctx)
+        return checks.is_owner(ctx)
 
     @commands.command(hidden=True)
     async def reload(self, ctx, extension_name):
