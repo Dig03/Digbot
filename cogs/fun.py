@@ -2,6 +2,7 @@ from discord.ext import commands
 from .func import paginator
 import random
 from math import isclose
+import asyncio
 
 
 class Fun(commands.Cog, name="Fun"):
@@ -63,6 +64,8 @@ BBBBBBBBBBBBBBBBBAAAAAAA                   AAAAAAANNNNNNNN         NNNNNNN      
     @commands.command()
     async def guess(self, ctx, imin: int, imax: int, tries: int = 3):
         """What number am I thinking of?"""
+        already = []
+
         if imax < 0 or imin < 0 or imin > imax:
             await ctx.send("That doesn't make sense.")
         elif imax - imin < tries:
@@ -70,24 +73,30 @@ BBBBBBBBBBBBBBBBBAAAAAAA                   AAAAAAANNNNNNNN         NNNNNNN      
         else:
             i = random.randint(imin, imax)
             await ctx.send("I've got a number, what's your guess?")
-            for n in range(tries):
+
+            t = tries
+            while t > 0:
                 try:
-                    def pred(m):
-                        return m.author == ctx.message.author and m.channel == ctx.message.channel
-                    guess = await self.bot.wait_for("message", check=pred, timeout=30)
-                    if guess is None:
-                        await ctx.send("Timed out while waiting for a response.")
-                        break
-                    guess = int(guess.content)
+                    def predicate(msg):
+                        return msg.author == ctx.message.author and msg.channel == ctx.message.channel
+
+                    guess = int((await self.bot.wait_for("message", check=predicate, timeout=30)).content)
+                except asyncio.TimeoutError:
+                    await ctx.send("Timed out while waiting for a response.")
+                    break
                 except ValueError:
                     await ctx.send("That isn't a number.")
                 else:
-                    if i == guess:
+                    if guess in already:
+                        await ctx.send("You've already tried that.")
+                    elif i == guess:
                         await ctx.send("Correct. Good job.")
                         break
                     else:
-                        t = tries - n - 1
+                        t -= 1
+                        already.append(guess)
                         await ctx.send("Wrong. You have {} tr{} left.".format(t, 'ies' if t != 1 else 'y'))
+
             await ctx.send("The number was {}.".format(i))
 
 
