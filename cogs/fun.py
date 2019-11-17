@@ -2,6 +2,8 @@ from discord.ext import commands
 from .func import paginator
 import random
 from math import isclose
+from .func.turing import run_frames_serialised
+import asyncio
 
 
 class Fun(commands.Cog, name="Fun"):
@@ -89,6 +91,14 @@ BBBBBBBBBBBBBBBBBAAAAAAA                   AAAAAAANNNNNNNN         NNNNNNN      
                         t = tries - n - 1
                         await ctx.send("Wrong. You have {} tr{} left.".format(t, 'ies' if t != 1 else 'y'))
             await ctx.send("The number was {}.".format(i))
+
+    @commands.command()
+    async def turing(self, ctx, *, encoding):
+        state, frames = run_frames_serialised(encoding)
+        msg = await ctx.send("Running...")
+        for frame in frames:
+            await asyncio.sleep(0.5)
+            await msg.edit(content=frame)
 
 
 def setup(bot):
